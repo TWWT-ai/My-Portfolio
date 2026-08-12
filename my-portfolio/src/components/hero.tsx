@@ -196,11 +196,11 @@ export default function Hero() {
             </p>
 
             <Link href="/contact" className="cta-btn cta-animate">
-              <span className="cta-btn-bg" />
-              <span className="cta-btn-text">Start a project now</span>
+              {/* <span className="cta-btn-bg" /> */}
+              {/* <span className="cta-btn-text">Start a project now</span>
               <span className="cta-btn-circle">
                 <ArrowIcon size={18} stroke="white" />
-              </span>
+              </span> */}
             </Link>
 
             {/* The four redirecting boxes. Each is a full <Link> to its own
@@ -214,11 +214,19 @@ export default function Hero() {
                   className="section-card card-animate"
                   style={{ animationDelay: `${1.35 + i * 0.1}s` }}
                 >
-                  <span className="sc-index">{section.index}</span>
-                  <span className="sc-title">{section.title}</span>
-                  <span className="sc-desc">{section.description}</span>
-                  <span className="sc-arrow" aria-hidden="true">
-                    <ArrowIcon size={14} />
+                  {/* Hover choreography (see .section-card in globals.css):
+                      the circle floods the card in the accent blue, arr-1
+                      exits right, arr-2 enters from the left, and sc-content
+                      slides right to make room for it. Order matters only for
+                      z-index stacking: circle 0, content 1, arrows 9. */}
+                  <span className="sc-circle" aria-hidden="true" />
+                  <ArrowIcon size={18} className="sc-arr sc-arr-1" />
+                  <ArrowIcon size={18} className="sc-arr sc-arr-2" />
+
+                  <span className="sc-content">
+                    <span className="sc-index">{section.index}</span>
+                    <span className="sc-title">{section.title}</span>
+                    <span className="sc-desc">{section.description}</span>
                   </span>
                 </Link>
               ))}
@@ -230,10 +238,29 @@ export default function Hero() {
   );
 }
 
-/** Small shared up-right arrow used by the CTA and every section card. */
-function ArrowIcon({ size = 18, stroke }: { size?: number; stroke?: string }) {
+/**
+ * Small shared up-right arrow used by the CTA and every section card.
+ * `className` is passed through so the cards can position two of them
+ * (.sc-arr-1 / .sc-arr-2) for the hover swap.
+ */
+function ArrowIcon({
+  size = 18,
+  stroke,
+  className,
+}: {
+  size?: number;
+  stroke?: string;
+  className?: string;
+}) {
   return (
-    <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 18 18"
+      fill="none"
+      className={className}
+      aria-hidden="true"
+    >
       <path
         d="M5 13L13 5M13 5H6M13 5V12"
         stroke={stroke}
