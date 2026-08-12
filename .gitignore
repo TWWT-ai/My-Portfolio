@@ -1,0 +1,5 @@
+.agents/
+.claude/
+Portfolio_guide.md
+.env
+src/generated/

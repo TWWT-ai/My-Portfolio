@@ -1,0 +1,114 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ProjectStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum MessageStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+enum Category {
+  FRONTEND
+  BACKEND
+  DATABASE
+  DEVOPS
+  TOOL
+}
+
+enum ExperienceType {
+  WORK
+  EDUCATION
+}
+
+model Project {
+  id        String        @id @default(cuid())
+  slug      String        @unique
+  title     String
+  summary   String
+  caseStudy String        @db.Text
+  liveUrl   String?
+  repoUrl   String?
+  featured  Boolean       @default(false)
+  status    ProjectStatus @default(DRAFT)
+  createdAt DateTime      @default(now())
+  images    ProjectImage[]
+  tags      Tag[]
+}
+
+model ProjectImage {
+  id        String  @id @default(cuid())
+  url       String
+  alt       String
+  order     Int     @default(0)
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+}
+
+model Tag {
+  id       String   @id @default(cuid())
+  name     String   @unique
+  category Category
+  projects Project[]
+}
+
+model Skill {
+  id        String   @id @default(cuid())
+  name      String
+  category  Category
+  yearsUsed Float    @default(0)
+  order     Int      @default(0)
+}
+
+model Experience {
+  id           String         @id @default(cuid())
+  type         ExperienceType
+  role         String
+  organization String
+  startDate    DateTime
+  endDate      DateTime?
+  bullets      String[]
+}
+
+model Message {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  body      String        @db.Text
+  status    MessageStatus @default(UNREAD)
+  createdAt DateTime      @default(now())
+}
+
+model PageView {
+  id          String   @id @default(cuid())
+  path        String
+  referrer    String?
+  country     String?
+  device      String?
+  visitorHash String
+  createdAt   DateTime @default(now())
+
+  @@index([path, createdAt])
+}
+
+model AdminUser {
+  id           String @id @default(cuid())
+  email        String @unique
+  passwordHash String
+}
