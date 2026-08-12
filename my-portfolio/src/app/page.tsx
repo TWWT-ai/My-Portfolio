@@ -17,6 +17,9 @@ export default async function Home() {
         Full-stack developer building with TypeScript, Next.js &amp; PostgreSQL.
       </p>
       <div className="mt-8 flex gap-4">
+        <Link href="/about" className="rounded bg-black px-6 py-3 text-white">
+          About Me
+        </Link>
         <Link href="/projects" className="rounded bg-black px-6 py-3 text-white">
           View Projects
         </Link>
