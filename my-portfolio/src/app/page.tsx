@@ -1,42 +1,38 @@
-import { prisma } from "@/lib/prisma";
-import Link from "next/link";
+/**
+ * REPLACED — the home page.
+ *
+ * Before: a plain scaffold page (h1 + three buttons + a "Featured Projects"
+ * grid queried from Prisma).
+ *
+ * After: the hero design — a full-viewport split with the portrait and its
+ * cursor-spotlight reveal on the right, and the headline, CTA and four
+ * clickable section boxes down the left. All of that lives in `<Hero />`.
+ *
+ * This file stays a Server Component; `<Hero />` is the only client boundary.
+ *
+ * The Prisma "featured projects" query was removed because the new home page
+ * has no project grid — the Projects box now sends visitors to /projects,
+ * which owns that list. To bring a featured strip back, re-add:
+ *
+ *   const featured = await prisma.project.findMany({
+ *     where: { featured: true, status: "PUBLISHED" },
+ *     include: { tags: true },
+ *     take: 3,
+ *   });
+ *
+ * and make this component `async` again.
+ */
 
-export const revalidate = 3600; // ISR: rebuild at most hourly
+import Hero from "@/components/hero";
 
-export default async function Home() {
-  const featured = await prisma.project.findMany({
-    where: { featured: true, status: "PUBLISHED" },
-    include: { tags: true },
-    take: 3,
-  });
+// ISR: rebuild from the DB at most hourly. Kept from the previous version so
+// the setting is already in place once this page reads content again.
+export const revalidate = 3600;
 
+export default function Home() {
   return (
-    <main className="mx-auto max-w-4xl px-4 py-16">
-      <h1 className="text-5xl font-bold">Hi, I&apos;m ScrewDriver</h1>
-      <p className="mt-4 text-xl text-gray-600">
-        Full-stack developer building with TypeScript, Next.js &amp; PostgreSQL.
-      </p>
-      <div className="mt-8 flex gap-4">
-        <Link href="/about" className="rounded bg-black px-6 py-3 text-white">
-          About Me
-        </Link>
-        <Link href="/projects" className="rounded bg-black px-6 py-3 text-white">
-          View Projects
-        </Link>
-        <Link href="/contact" className="rounded border px-6 py-3">
-          Contact Me
-        </Link>
-      </div>
-
-      <h2 className="mt-20 text-3xl font-semibold">Featured Projects</h2>
-      <div className="mt-6 grid gap-6 sm:grid-cols-3">
-        {featured.map((p) => (
-          <Link key={p.id} href={`/projects/${p.slug}`} className="rounded-lg border p-5 hover:shadow-md">
-            <h3 className="font-semibold">{p.title}</h3>
-            <p className="mt-2 text-sm text-gray-600">{p.summary}</p>
-          </Link>
-        ))}
-      </div>
+    <main>
+      <Hero />
     </main>
   );
 }

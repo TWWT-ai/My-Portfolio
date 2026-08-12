@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1072" viewBox="0 0 900 1072">
+  <!--
+    Base image PLACEHOLDER for the home hero.
+    Sized 900x1072 to match public/avatar.jpg exactly, so when you swap this
+    file for a real photo the spotlight reveal stays perfectly aligned.
+    Replace this file (keeping the name), or repoint the background-image on
+    .hero-base-img in src/app/globals.css.
+  -->
+  <rect width="900" height="1072" fill="#E4E4E4"/>
+  <rect x="14" y="14" width="872" height="1044" fill="#D2D2D2" stroke="#B4B4B4" stroke-width="3" stroke-dasharray="18 14" rx="10"/>
+  <g fill="#B7B7B7">
+    <circle cx="450" cy="430" r="150"/>
+    <path d="M180 1058 C180 830 290 700 450 700 C610 700 720 830 720 1058 Z"/>
+  </g>
+  <text x="450" y="196" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="6" fill="#8E8E8E">BASE IMAGE</text>
+  <text x="450" y="240" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="500" letter-spacing="3" fill="#A2A2A2">PLACEHOLDER</text>
+  <text x="450" y="1010" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="19" fill="#9C9C9C">replace public/base-placeholder.svg</text>
+</svg>

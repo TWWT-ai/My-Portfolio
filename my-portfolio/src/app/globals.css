@@ -1,8 +1,40 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   UPDATED — global stylesheet.
+
+   What changed at the top of this file:
+     - Added the portfolio design tokens (--bg / --ink / --cream / --accent /
+       --muted) used by the hero and the navigation.
+     - `body` now uses the Inter variable set in layout.tsx instead of the
+       hard-coded `Arial, Helvetica, sans-serif` left over from the scaffold.
+     - The `prefers-color-scheme: dark` override is commented out rather than
+       deleted. The new hero and nav are a light-only design (dark ink on a
+       light grey field); leaving the override on made the fixed logo and
+       burger effectively invisible for anyone on a dark-mode OS. Re-enable it
+       once there is a real dark variant for those components.
+
+   Everything below the "PORTFOLIO HOME PAGE" banner is new: the hero, the
+   splash intro, the burger menu panel and the four section cards. It is plain
+   CSS rather than Tailwind utilities because it is mostly keyframes,
+   mask-image plumbing and multi-step hover choreography — all of which read
+   far better as a stylesheet than as long className strings.
+   ========================================================================= */
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Portfolio design tokens */
+  --bg: #e4e4e4;      /* page field behind the hero            */
+  --ink: #111111;     /* primary text                          */
+  --cream: #f4f1e8;   /* burger fill + oversized backdrop word  */
+  --accent: #75c5de;  /* splash blocks, CTA circle, card hover  */
+  --muted: #6b6b6b;   /* descriptions and secondary copy        */
+
+  /* Height of the global footer. The hero subtracts this from 100vh so the
+     home page fits exactly one viewport. Keep in sync with footer.tsx. */
+  --footer-h: 52px;
 }
 
 @theme inline {
@@ -12,15 +44,713 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Disabled — see the note at the top of this file.
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
 }
+*/
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* <body> is a flex column (set in layout.tsx); this pushes the footer down. */
+main {
+  flex: 1 0 auto;
+}
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  overflow-x: hidden;
+}
+
+/* ============================================================================
+   PORTFOLIO HOME PAGE
+   Consumed by src/components/hero.tsx and src/components/nav_bar.tsx
+   ========================================================================= */
+
+/* ---------- Splash intro ------------------------------------------------- */
+/* Five accent blocks per row; the top row slides up and the bottom row slides
+   down, staggered left to right, then the whole overlay fades out. */
+.splash {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  pointer-events: none;
+  overflow: hidden;
+  animation: splashHide 0.3s ease 1.35s forwards;
+}
+.splash-row {
+  display: flex;
+  width: 100%;
+  height: 50%;
+}
+.splash-box {
+  width: 20%;
+  height: 100%;
+  background: var(--accent);
+}
+.splash-row-top .splash-box {
+  animation: splashTop 1s cubic-bezier(0.96, -0.02, 0.38, 1.01) forwards;
+}
+.splash-row-bottom .splash-box {
+  animation: splashBottom 1s cubic-bezier(0.96, -0.02, 0.38, 1.01) forwards;
+}
+.splash-box:nth-child(1) { animation-delay: 0s; }
+.splash-box:nth-child(2) { animation-delay: 0.05s; }
+.splash-box:nth-child(3) { animation-delay: 0.1s; }
+.splash-box:nth-child(4) { animation-delay: 0.15s; }
+.splash-box:nth-child(5) { animation-delay: 0.2s; }
+
+@keyframes splashTop {
+  from { transform: translateY(0%); }
+  to { transform: translateY(-100%); }
+}
+@keyframes splashBottom {
+  from { transform: translateY(0%); }
+  to { transform: translateY(100%); }
+}
+@keyframes splashHide {
+  to { opacity: 0; visibility: hidden; }
+}
+
+/* ---------- Entrance animations ------------------------------------------ */
+@keyframes heroImageIn {
+  from { opacity: 0; transform: scale(1.35) rotate(2deg); }
+  to { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+.hero-image-animate {
+  opacity: 0;
+  animation: heroImageIn 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1s forwards;
+}
+
+@keyframes wordReveal {
+  from { opacity: 0; transform: translateY(10px); filter: blur(10px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.word-reveal {
+  opacity: 0;
+  display: inline-block;
+  margin-right: 0.28em;
+  animation: wordReveal 0.45s ease forwards; /* delay set per-word in hero.tsx */
+}
+
+@keyframes slideUpScale {
+  from { opacity: 0; transform: translateY(60px) scale(0.4); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.cta-animate {
+  opacity: 0;
+  animation: slideUpScale 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.15s forwards;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.card-animate {
+  opacity: 0;
+  animation: cardIn 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  /* delay set per-card in hero.tsx */
+}
+
+@keyframes creatorSlideUp {
+  from { transform: translateY(330px); }
+  to { transform: translateY(0); }
+}
+.creator-text-animate {
+  transform: translateY(330px);
+  animation: creatorSlideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 1.5s forwards;
+}
+
+/* ---------- Primary CTA --------------------------------------------------- */
+/* The white pill grows to swallow the accent circle on hover, and the circle
+   slides left to meet it. */
+.cta-btn {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 9999px;
+  padding: 8px;
+  gap: 12px;
+  text-decoration: none;
+}
+.cta-btn-bg {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 8px;
+  width: calc(100% - 8px - 8px - 48px - 12px);
+  border-radius: 9999px;
+  background: #fff;
+  z-index: 0;
+  transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.cta-btn:hover .cta-btn-bg { width: calc(100% - 16px); }
+.cta-btn-text {
+  position: relative;
+  z-index: 1;
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 16px;
+  padding: 12px 32px;
+  white-space: nowrap;
+}
+.cta-btn-circle {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.cta-btn:hover .cta-btn-circle { transform: translateX(-7px); }
+
+@media (min-width: 768px) {
+  .cta-btn-bg { width: calc(100% - 8px - 8px - 54px - 12px); }
+  .cta-btn-text { font-size: 18px; padding: 16px 40px; }
+  .cta-btn-circle { width: 54px; height: 54px; }
+}
+/* Desktop trims it again: the 768px sizing above is ~70px tall, which is the
+   single biggest block of vertical space competing with the four cards. */
+@media (min-width: 900px) {
+  .cta-btn-bg { width: calc(100% - 8px - 8px - 46px - 12px); }
+  .cta-btn-text { font-size: 16px; padding: 13px 32px; }
+  .cta-btn-circle { width: 46px; height: 46px; }
+}
+
+/* ---------- Menu CTA (same pill, smaller) --------------------------------- */
+.menu-cta-wrap { margin-top: 32px; }
+.menu-cta-btn {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 9999px;
+  padding: 6px;
+  gap: 8px;
+  text-decoration: none;
+}
+.menu-cta-bg {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 8px;
+  width: calc(100% - 8px - 8px - 38px - 8px);
+  border-radius: 9999px;
+  background: #fff;
+  z-index: 0;
+  transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.menu-cta-btn:hover .menu-cta-bg { width: calc(100% - 12px); }
+.menu-cta-text {
+  position: relative;
+  z-index: 1;
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 14px;
+  padding: 8px 40px;
+  white-space: nowrap;
+}
+.menu-cta-circle {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+.menu-cta-btn:hover .menu-cta-circle { transform: translateX(-4px); }
+
+/* ---------- Fixed navigation ---------------------------------------------- */
+.logo-wrapper {
+  position: fixed;
+  top: 26px;
+  left: 20px;
+  z-index: 10;
+}
+.logo-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.logo-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--ink);
+  color: var(--cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
+.logo-text {
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+@media (max-width: 480px) {
+  .logo-text { display: none; }
+}
+@media (min-width: 768px) {
+  .logo-wrapper { top: 38px; left: 40px; }
+}
+
+.burger-wrapper {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  z-index: 10;
+}
+@media (min-width: 768px) {
+  .burger-wrapper { top: 27px; right: 40px; }
+}
+
+.burger-btn {
+  width: 59px;
+  height: 59px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  background: var(--cream);
+  transition: background 0.4s ease;
+}
+.burger-btn .bar {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--ink);
+  transition: all 0.3s ease;
+}
+.burger-btn:hover { background: #0b0b0b; }
+.burger-btn:hover .bar { background: var(--cream); }
+/* `.open` is toggled from nav_bar.tsx — bars cross into an X. */
+.burger-btn.open { background: #0b0b0b; }
+.burger-btn.open .bar { background: var(--cream); }
+.burger-btn.open .bar:first-child { transform: rotate(45deg) translate(2px, 2px); }
+.burger-btn.open .bar:last-child { transform: rotate(-45deg) translate(2px, -2px); }
+
+/* ---------- Menu panel ---------------------------------------------------- */
+.menu-panel {
+  position: fixed;
+  z-index: 9;
+  left: 8px;
+  right: 8px;
+  top: -700px; /* parked off-screen; `.open` slides it down */
+  opacity: 0;
+  pointer-events: none;
+  border-radius: 20px;
+  background: rgba(17, 17, 17, 0.95);
+  backdrop-filter: blur(26px);
+  -webkit-backdrop-filter: blur(26px);
+  padding: 90px 32px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: top 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s ease;
+}
+.menu-panel.open {
+  top: 0;
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (min-width: 768px) {
+  .menu-panel { left: auto; right: 7px; width: 420px; padding: 60px; }
+  .menu-panel.open { top: 7px; }
+}
+
+.menu-panel nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.menu-panel nav a {
+  color: var(--cream);
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 130%;
+  text-decoration: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.menu-panel nav a:hover {
+  opacity: 0.65;
+  transform: translateX(6px);
+}
+@media (min-width: 768px) {
+  .menu-panel nav a { font-size: 40px; }
+}
+
+.menu-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 32px;
+}
+.menu-email {
+  color: #9a9590;
+  font-size: 18px;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+.menu-email:hover { color: var(--cream); }
+@media (min-width: 768px) {
+  .menu-email { font-size: 20px; }
+}
+.menu-socials {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.menu-socials a {
+  color: #9a9590;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.3s ease;
+}
+.menu-socials a:hover { color: var(--cream); }
+
+/* ---------- Hero ---------------------------------------------------------- */
+/* Layout note: on desktop BOTH .hero-media and .hero-content are absolutely
+   positioned, so .hero has no in-flow children and would collapse to zero
+   height. The explicit height below is load-bearing — do not remove it. */
+.hero {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+@media (min-width: 900px) {
+  /* Exactly one viewport minus the footer, so the fourth card is never
+     clipped and the page does not scroll. The old flat `min-height: 800px`
+     overflowed any window shorter than ~870px, and once the page scrolled the
+     fixed logo slid over the headline. */
+  .hero { height: calc(100vh - var(--footer-h)); min-height: 540px; }
+}
+
+/* Mobile: a block in normal flow with the content below it.
+   Desktop: a full-bleed layer with the content overlaid on top. */
+.hero-media {
+  position: relative;
+  width: 100%;
+  height: 56vh;
+  min-height: 340px;
+  overflow: hidden;
+}
+@media (min-width: 900px) {
+  .hero-media { position: absolute; inset: 0; height: auto; min-height: 0; }
+}
+
+.hero-big-text {
+  position: absolute;
+  bottom: -18px;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  width: 100%;
+  text-align: center;
+  pointer-events: none;
+}
+.hero-big-text h2 {
+  font-weight: 600;
+  color: var(--cream);
+  line-height: 80%;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+  font-size: clamp(96px, 22vw, 470px);
+}
+@media (min-width: 900px) {
+  .hero-big-text { bottom: -40px; }
+}
+
+/* Both image layers share this box so the spotlight reveal registers exactly.
+   Swapping the base image? Match public/avatar.jpg's 900x1072 aspect ratio. */
+.hero-layer {
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center bottom;
+}
+@media (min-width: 900px) {
+  .hero-layer { background-position: 82% bottom; background-size: auto 96%; }
+}
+.hero-base-img {
+  z-index: 5;
+  background-image: url("/base-placeholder.svg"); /* PLACEHOLDER — swap me */
+}
+.hero-reveal-img {
+  z-index: 7;
+  pointer-events: none;
+  background-image: url("/avatar.jpg");
+  /* mask-image is written per-frame by the spotlight loop in hero.tsx.
+     With no mask (touch / reduced motion) this layer simply shows in full. */
+}
+
+.hero-content {
+  position: relative;
+  z-index: 8;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 28px 20px 56px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+@media (min-width: 900px) {
+  .hero-content {
+    position: absolute;
+    inset: 0;
+    padding: 86px 40px 18px 40px;
+    justify-content: flex-start;
+    /* Let the cursor through to the spotlight; children re-enable pointers. */
+    pointer-events: none;
+  }
+}
+
+.hero-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  width: 100%;
+  pointer-events: auto;
+}
+@media (min-width: 900px) {
+  .hero-left { width: min(46%, 480px); gap: 13px; }
+}
+
+.hero-headline {
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 108%;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+@media (min-width: 900px) {
+  .hero-headline { font-size: clamp(30px, 3.2vw, 44px); }
+}
+
+.hero-sub {
+  font-size: 15px;
+  line-height: 150%;
+  color: var(--muted);
+  max-width: 420px;
+  opacity: 0;
+  animation: wordReveal 0.6s ease 1.25s forwards;
+}
+@media (min-width: 900px) {
+  .hero-sub { font-size: 16px; }
+}
+
+/* ---------- The four section cards ---------------------------------------- */
+/* Each card is a whole <Link> to its own page. Content comes from
+   src/lib/sections.ts, shared with the burger menu. */
+.section-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.section-card {
+  position: relative;
+  display: block;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(17, 17, 17, 0.1);
+  border-radius: 14px;
+  padding: 10px 46px 10px 14px; /* right padding clears the arrow badge */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+}
+.section-card:hover {
+  transform: translateX(6px);
+  background: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 10px 28px rgba(17, 17, 17, 0.1);
+}
+.section-card .sc-index {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.section-card .sc-title {
+  display: block;
+  margin-top: 2px;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+@media (min-width: 900px) {
+  .section-card .sc-title { font-size: 18px; }
+}
+.section-card .sc-desc {
+  display: block;
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 140%;
+  color: var(--muted);
+}
+.section-card .sc-arrow {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(17, 17, 17, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.35s ease,
+    transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.section-card .sc-arrow svg {
+  stroke: var(--ink);
+  transition: stroke 0.35s ease;
+}
+.section-card:hover .sc-arrow {
+  background: var(--accent);
+  transform: translateY(-50%) translateX(3px);
+}
+.section-card:hover .sc-arrow svg { stroke: #fff; }
+
+/* ---------- Global footer -------------------------------------------------- */
+/* Fixed height, matched by --footer-h at the top of this file. */
+.site-footer {
+  flex: 0 0 auto;
+  height: var(--footer-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 20px;
+  background: var(--bg);
+  border-top: 1px solid rgba(17, 17, 17, 0.1);
+  font-size: 12.5px;
+  color: var(--muted);
+}
+@media (min-width: 768px) {
+  .site-footer { padding: 0 40px; font-size: 13px; }
+}
+.footer-links {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.site-footer a {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+.site-footer a:hover { color: var(--ink); }
+/* The email is the least useful thing to keep on a narrow window. */
+@media (max-width: 560px) {
+  .footer-links a[href^="mailto:"] { display: none; }
+}
+
+/* ---------- Short desktop windows ----------------------------------------- */
+/* Two tiers. Vertical space, not width, is what actually constrains this
+   layout — four cards plus a headline, a sub-line and a CTA is a tall column.
+   Tier 1 (<=800px tall) trims the slack; tier 2 (<=690px) is the real squeeze,
+   where the logo and burger also move up so the headline can start higher
+   without the fixed logo landing on top of it. */
+@media (min-width: 900px) and (max-height: 800px) {
+  .hero-content { padding-top: 84px; padding-bottom: 12px; }
+  .hero-left { gap: 10px; }
+  .hero-sub { font-size: 14px; }
+  .section-cards { gap: 6px; }
+  .section-card { padding: 8px 44px 8px 13px; }
+  .section-card .sc-desc { font-size: 12px; }
+  .cta-btn-text { padding: 11px 30px; }
+  .cta-btn-circle { width: 42px; height: 42px; }
+  .cta-btn-bg { width: calc(100% - 8px - 8px - 42px - 12px); }
+}
+
+@media (min-width: 900px) and (max-height: 690px) {
+  .logo-wrapper { top: 22px; }
+  .burger-wrapper { top: 12px; }
+  .burger-btn { width: 48px; height: 48px; }
+
+  .hero-content { padding-top: 66px; padding-bottom: 10px; }
+  .hero-headline { font-size: clamp(26px, 2.6vw, 33px); }
+  .hero-left { gap: 9px; }
+  .hero-sub { font-size: 13px; }
+
+  .section-cards { gap: 6px; }
+  .section-card { padding: 7px 42px 7px 12px; }
+  .section-card .sc-index { font-size: 10px; }
+  .section-card .sc-title { font-size: 16px; }
+  .section-card .sc-desc { font-size: 11.5px; }
+  .section-card .sc-arrow { width: 26px; height: 26px; right: 12px; }
+
+  .cta-btn { padding: 6px; gap: 10px; }
+  .cta-btn-text { font-size: 15px; padding: 10px 28px; }
+  .cta-btn-circle { width: 40px; height: 40px; }
+  .cta-btn-bg { width: calc(100% - 6px - 6px - 40px - 10px); }
+}
+
+/* ---------- Reduced motion ------------------------------------------------ */
+/* Everything lands in its final state immediately. The spotlight loop is also
+   skipped in JS (see hero.tsx), so no mask is applied either. */
+@media (prefers-reduced-motion: reduce) {
+  .splash { animation: splashHide 0.01s linear forwards; }
+  .splash-box { animation: none !important; }
+  .hero-image-animate,
+  .word-reveal,
+  .cta-animate,
+  .creator-text-animate,
+  .card-animate,
+  .hero-sub {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    visibility: visible !important;
+  }
 }
