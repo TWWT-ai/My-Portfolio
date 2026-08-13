@@ -1,41 +1,55 @@
-import { prisma } from "@/lib/prisma";
-import Link from "next/link";
+/**
+ * REPLACED — /projects.
+ *
+ * Was a copy of the home-page scaffold (same h1, same Prisma featured query).
+ * Now: a bounded three-per-row grid, newest first, with the hover repaint and
+ * reveal handled by the shared <EntryGrid />.
+ *
+ * Server Component. It reads the static data file, maps it into the neutral
+ * Entry shape and hands it over — no database call, which also means this route
+ * no longer participates in the build-time Postgres connection that has been
+ * failing the Vercel deploy.
+ *
+ * Sorting lives in projectsByNewest(), not here, so "newest first" stays a
+ * property of the data.
+ *
+ * When the GitHub sync lands it writes src/lib/projects.ts and nothing on this
+ * page has to change.
+ */
 
-export const revalidate = 3600; // ISR: rebuild at most hourly
+import EntryGrid, { type Entry } from "@/components/entry_grid";
+import { projectsByNewest } from "@/lib/projects";
 
-export default async function Home() {
-  const featured = await prisma.project.findMany({
-    where: { featured: true, status: "PUBLISHED" },
-    include: { tags: true },
-    take: 3,
-  });
+export const metadata = {
+  title: "Projects — Temuulen Wang",
+  description: "Selected work: problem, approach, stack and result.",
+};
+
+export default function ProjectsPage() {
+  const entries: Entry[] = projectsByNewest().map((p) => ({
+    slug: p.slug,
+    title: p.title,
+    tagline: p.tagline,
+    meta: new Date(p.createdAt).getFullYear().toString(),
+    body: p.readmeExcerpt,
+    skills: p.skills,
+    links: [
+      ...(p.repoUrl ? [{ label: "Repository", href: p.repoUrl }] : []),
+      ...(p.liveUrl ? [{ label: "Live", href: p.liveUrl }] : []),
+    ],
+    theme: p.theme,
+  }));
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-16">
-      <h1 className="text-5xl font-bold">Hi, I&apos;m ScrewDriver</h1>
-      <p className="mt-4 text-xl text-gray-600">
-        Projects
-      </p>
-      <div className="mt-8 flex gap-4">
-        <Link href="/" className="rounded bg-black px-6 py-3 text-white">
-          Back to Home
-        </Link>
-        <Link href="/about" className="rounded bg-black px-6 py-3 text-white">
-          About Me
-        </Link>
-        <Link href="/contact" className="rounded border px-6 py-3">
-          Contact Me
-        </Link>
+    <main className="page">
+      <div className="page-head">
+        <span className="page-eyebrow">02 — Projects</span>
+        <h1 className="page-title">Projects</h1>
+        <p className="page-lede">
+          Case studies in reverse order. Hover one to read it.
+        </p>
       </div>
-
-      <div className="mt-6 grid gap-6 sm:grid-cols-3">
-        {featured.map((p) => (
-          <Link key={p.id} href={`/projects/${p.slug}`} className="rounded-lg border p-5 hover:shadow-md">
-            <h3 className="font-semibold">{p.title}</h3>
-            <p className="mt-2 text-sm text-gray-600">{p.summary}</p>
-          </Link>
-        ))}
-      </div>
+      <EntryGrid entries={entries} emptyLabel="No projects published yet." />
     </main>
   );
 }

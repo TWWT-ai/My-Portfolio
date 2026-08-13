@@ -35,6 +35,14 @@
   /* Height of the global footer. The hero subtracts this from 100vh so the
      home page fits exactly one viewport. Keep in sync with footer.tsx. */
   --footer-h: 52px;
+
+  /* Live page paint. EntryGrid rewrites these on <html> while a card is
+     hovered, so the background AND the fixed logo/header/footer flip together.
+     Everything that must stay legible over a dark theme reads --page-ink. */
+  --page-bg: var(--bg);
+  --page-ink: var(--ink);
+  --page-image: none;
+  --page-image-opacity: 0;
 }
 
 @theme inline {
@@ -63,11 +71,27 @@ main {
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--page-bg);
+  color: var(--page-ink);
   font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
   overflow-x: hidden;
+  transition: background-color 0.55s ease, color 0.55s ease;
+}
+
+/* Theme image layer. Separate from background-color because background-image
+   cannot be transitioned — this fades its opacity instead. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--page-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--page-image-opacity);
+  transition: opacity 0.55s ease;
 }
 
 /* ============================================================================
@@ -301,12 +325,15 @@ body {
   gap: 10px;
   text-decoration: none;
 }
+/* Logo, header links and footer read --page-ink, not --ink, so a dark project
+   theme does not leave them invisible against their own background. */
 .logo-mark {
   width: 34px;
   height: 34px;
   border-radius: 9px;
-  background: var(--ink);
-  color: var(--cream);
+  background: var(--page-ink);
+  color: var(--page-bg);
+  transition: background 0.55s ease, color 0.55s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -318,7 +345,8 @@ body {
   font-weight: 600;
   font-size: 15px;
   letter-spacing: -0.01em;
-  color: var(--ink);
+  color: var(--page-ink);
+  transition: color 0.55s ease;
 }
 @media (max-width: 480px) {
   .logo-text { display: none; }
@@ -723,7 +751,9 @@ body {
   background: var(--bg);
   border-top: 1px solid rgba(17, 17, 17, 0.1);
   font-size: 12.5px;
-  color: var(--muted);
+  /* Slightly darker than --muted: #6b6b6b on the #e4e4e4 bar measures 4.19:1,
+     just under the 4.5:1 AA threshold for text this size. */
+  color: #575757;
 }
 @media (min-width: 768px) {
   .site-footer { padding: 0 40px; font-size: 13px; }
@@ -734,7 +764,7 @@ body {
   flex-wrap: wrap;
 }
 .site-footer a {
-  color: var(--muted);
+  color: #575757;
   text-decoration: none;
   transition: color 0.25s ease;
 }
@@ -788,12 +818,454 @@ body {
   .cta-btn-bg { width: calc(100% - 6px - 6px - 40px - 10px); }
 }
 
+
+/* ---------- Inline redirecting header ------------------------------------- */
+/* Centred between the fixed logo and the fixed burger. Hidden below 900px,
+   where there is no room for four links plus a logo — the burger covers it. */
+.header-nav {
+  display: none;
+}
+@media (min-width: 900px) {
+  .header-nav {
+    position: fixed;
+    top: 38px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    height: 34px;
+  }
+}
+.header-link {
+  position: relative;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  color: var(--page-ink);
+  opacity: 0.65;
+  transition: opacity 0.3s ease, color 0.55s ease;
+}
+.header-link::after {
+  /* Underline grows from the centre; also the active-route marker. */
+  content: "";
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  bottom: -6px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  transition: left 0.35s cubic-bezier(0.23, 1, 0.32, 1),
+    right 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.header-link:hover { opacity: 1; }
+.header-link:hover::after { left: 0; right: 0; }
+.header-link.active { opacity: 1; }
+.header-link.active::after { left: 0; right: 0; }
+
+/* ---------- Shared page shell (about / projects / experience / contact) ---- */
+/* Top padding clears the fixed header; the footer is handled by main{flex}. */
+.page {
+  position: relative;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 104px 20px 40px;
+}
+@media (min-width: 900px) {
+  .page { padding: 116px 40px 40px; }
+}
+
+/* Above the sprite layer — otherwise a floating sprite can land on the title. */
+.page-head {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 26px;
+}
+.page-eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.page-title {
+  margin-top: 6px;
+  font-size: clamp(32px, 4.4vw, 52px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 104%;
+  color: var(--page-ink);
+  transition: color 0.55s ease;
+}
+.page-lede {
+  margin-top: 8px;
+  font-size: 15px;
+  color: var(--page-ink);
+  opacity: 0.62;
+  max-width: 520px;
+  transition: color 0.55s ease;
+}
+
+/* ---------- Entry grid: /projects and /experience ------------------------- */
+/* "Kept within a rectangular shape that fits within the screen": the panel is
+   capped at the space left below the header and above the footer, and scrolls
+   internally instead of growing the page. */
+.entry-panel {
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 14px;
+  transition: background 0.55s ease, border-color 0.55s ease;
+}
+@media (min-width: 900px) {
+  .entry-panel {
+    padding: 18px;
+    max-height: calc(100vh - var(--footer-h) - 116px - 40px - 150px);
+    overflow-y: auto;
+  }
+}
+
+.entry-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+@media (min-width: 640px) {
+  .entry-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 900px) {
+  /* Three per row, as specified. */
+  .entry-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.entry-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 190px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(17, 17, 17, 0.1);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55);
+  transition: box-shadow 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+    transform 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+    border-color 0.5s ease;
+}
+.entry-card:hover,
+.entry-card:focus-within {
+  transform: translateY(-4px);
+  border-color: var(--accent);
+  box-shadow: 0 14px 34px rgba(17, 17, 17, 0.16);
+}
+
+.entry-meta {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.entry-title {
+  margin-top: 4px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.entry-tagline {
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 140%;
+  color: var(--muted);
+}
+
+/* The reveal. On pointer devices it is collapsed until hover or focus; on
+   touch there is no hover, so it is simply always open. */
+.entry-reveal { margin-top: 10px; }
+@media (hover: hover) and (pointer: fine) {
+  .entry-reveal {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transform: translateY(6px);
+    transition: opacity 0.45s ease, max-height 0.55s ease, transform 0.45s ease;
+  }
+  .entry-card:hover .entry-reveal,
+  .entry-card:focus-within .entry-reveal,
+  .entry-card.is-open .entry-reveal {
+    opacity: 1;
+    max-height: 460px;
+    transform: translateY(0);
+  }
+}
+
+.entry-body {
+  font-size: 12.5px;
+  line-height: 152%;
+  color: var(--muted);
+  /* Clamped to four lines until "View more"; the ~100-word excerpt is written
+     to fit roughly that. */
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.entry-body.expanded {
+  -webkit-line-clamp: unset;
+  display: block;
+  overflow: visible;
+}
+
+.entry-more {
+  margin-top: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.3s ease;
+}
+.entry-more:hover { color: var(--accent); }
+
+.entry-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+  list-style: none;
+}
+.entry-skills li {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: var(--ink);
+  background: rgba(117, 197, 222, 0.28);
+}
+
+.entry-links {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+}
+.entry-links a {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.3s ease;
+}
+.entry-links a:hover { color: var(--accent); }
+
+.entry-empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ---------- About --------------------------------------------------------- */
+.about-page { max-width: 900px; }
+
+.about-prose {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.about-prose p {
+  margin-top: 18px;
+  font-size: 16px;
+  line-height: 178%;
+  color: var(--page-ink);
+  opacity: 0.82;
+}
+.about-lead {
+  font-size: 20px !important;
+  line-height: 156% !important;
+  opacity: 1 !important;
+  font-weight: 500;
+}
+@media (min-width: 900px) {
+  .about-lead { font-size: 23px !important; }
+}
+.about-outro { opacity: 1 !important; }
+.about-prose a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.3s ease;
+}
+.about-prose a:hover { color: var(--accent); }
+
+/* Floating 16px pixel sprites. The layer covers the page but never intercepts
+   clicks; each sprite gets one of four motion paths from pixel_sprites.tsx. */
+.about-sprites {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.about-sprite {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  opacity: 0.85;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+  will-change: transform;
+}
+.sprite-drift { animation-name: spriteDrift; }
+.sprite-bob { animation-name: spriteBob; }
+.sprite-orbit { animation-name: spriteOrbit; }
+.sprite-sway { animation-name: spriteSway; }
+
+@keyframes spriteDrift {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  33%  { transform: translate(22px, -18px) rotate(8deg); }
+  66%  { transform: translate(-14px, -34px) rotate(-6deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+@keyframes spriteBob {
+  0%   { transform: translateY(0) scale(1); }
+  50%  { transform: translateY(-14px) scale(1.12); }
+  100% { transform: translateY(0) scale(1); }
+}
+@keyframes spriteOrbit {
+  0%   { transform: rotate(0deg) translateX(16px) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(16px) rotate(-360deg); }
+}
+@keyframes spriteSway {
+  0%   { transform: translateX(0) rotate(-10deg); }
+  50%  { transform: translateX(20px) rotate(10deg); }
+  100% { transform: translateX(0) rotate(-10deg); }
+}
+
+/* ---------- Contact ------------------------------------------------------- */
+/* The brief asked for the empty space to be handled deliberately rather than
+   filled. A two-column split does that: a large statement earns the left half,
+   the four details become generous full-width rows on the right. */
+.contact-page { max-width: 1120px; }
+
+.contact-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  align-items: start;
+}
+@media (min-width: 820px) {
+  .contact-split {
+    grid-template-columns: 1fr 1fr;
+    gap: 72px;
+    min-height: 58vh;
+    align-items: center;
+  }
+}
+
+.contact-headline {
+  margin-top: 10px;
+  font-size: clamp(38px, 6vw, 68px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 98%;
+  color: var(--page-ink);
+}
+.contact-sub {
+  margin-top: 18px;
+  font-size: 15px;
+  line-height: 165%;
+  color: var(--page-ink);
+  opacity: 0.66;
+  max-width: 380px;
+}
+/* Reserve the zone detail's width so the line does not jump when the client
+   fills it in after mount (see components/local_time.tsx). */
+.contact-zone {
+  display: inline-block;
+  min-width: 13ch;
+}
+.contact-locale {
+  margin-top: 22px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--page-ink);
+  opacity: 0.45;
+}
+
+.contact-list { list-style: none; }
+.contact-row {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 20px 44px 20px 4px;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.14);
+  text-decoration: none;
+  transition: padding-left 0.4s cubic-bezier(0.23, 1, 0.32, 1),
+    border-color 0.4s ease;
+}
+.contact-list li:first-child .contact-row {
+  border-top: 1px solid rgba(17, 17, 17, 0.14);
+}
+.contact-row:hover {
+  padding-left: 14px;
+  border-color: var(--accent);
+}
+.contact-label {
+  flex: 0 0 84px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.contact-value {
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--page-ink);
+  word-break: break-word;
+}
+@media (min-width: 900px) {
+  .contact-value { font-size: 19px; }
+}
+.contact-arrow {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%) translateX(-6px);
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.contact-arrow svg { stroke: var(--page-ink); }
+.contact-row:hover .contact-arrow {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
 /* ---------- Reduced motion ------------------------------------------------ */
 /* Everything lands in its final state immediately. The spotlight loop is also
    skipped in JS (see hero.tsx), so no mask is applied either. */
 @media (prefers-reduced-motion: reduce) {
   .splash { animation: splashHide 0.01s linear forwards; }
   .splash-box { animation: none !important; }
+  .about-sprite { animation: none !important; }
+
   .section-card,
   .section-card .sc-circle,
   .section-card .sc-arr,

@@ -11,16 +11,25 @@
  * The panel lists the SAME four sections as the home-page hero cards, because
  * both read from `src/lib/sections.ts`. Update that one array to change both.
  *
- * Client Component: it owns the open/closed state of the panel.
+ * Also renders the inline "redirecting header" — the four section links laid
+ * out horizontally, centred between the logo and the burger, on screens wide
+ * enough to hold them (>=900px). Below that the burger panel is the only
+ * navigation, since four inline links plus a logo will not fit a phone.
+ * The current route is marked with aria-current and an accent underline.
+ *
+ * Client Component: it owns the open/closed state of the panel, and reads the
+ * active pathname.
  * The panel closes on link click and on Escape.
  */
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SECTIONS } from "@/lib/sections";
 
 export default function NavBar() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
   // Escape closes the panel.
   useEffect(() => {
@@ -40,6 +49,23 @@ export default function NavBar() {
           <span className="logo-text">Temuulen Wang</span>
         </Link>
       </div>
+
+      {/* Inline redirecting header — desktop only. */}
+      <nav className="header-nav" aria-label="Pages">
+        {SECTIONS.map((section) => {
+          const active = pathname === section.href;
+          return (
+            <Link
+              key={section.href}
+              href={section.href}
+              className={`header-link${active ? " active" : ""}`}
+              aria-current={active ? "page" : undefined}
+            >
+              {section.title}
+            </Link>
+          );
+        })}
+      </nav>
 
       <div className="burger-wrapper">
         <button
