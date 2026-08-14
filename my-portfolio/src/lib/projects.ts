@@ -66,37 +66,77 @@ export const PROJECTS: Project[] = [
     theme: { color: "#75c5de" },
   },
   {
-    slug: "project-two",
-    title: "Second Project",
-    tagline: "One line on what it does.",
+    slug: "rgb-d-gesture-recognition",
+    title: "RGB-D Gesture Recognition",
+    tagline: "Multi-task deep learning: detect, segment and classify hand gestures from RGB-D.",
     readmeExcerpt:
-      "Placeholder. Swap this for the opening section of the repository's README — the part that explains the problem the project solves and the approach taken, rather than installation instructions. Around a hundred words reads well here: enough to give a recruiter the shape of the work without making them open the repo, and short enough that the expanded card still fits on screen.",
-    skills: ["Python", "FastAPI", "Docker"],
-    repoUrl: "https://github.com/TWWT-ai",
-    createdAt: "2026-06-02T00:00:00Z",
+      "HandGestureNet does three jobs at once from a single 4-channel RGB-D frame: a YOLO-style detection head over a 7×7 grid, a U-Net decoder producing a 448×448 binary mask, and a classifier over ten gestures — all sharing one six-stage backbone, trained under a weighted multi-task loss. Splits are person-level, so train, validation and test never share an individual and the reported numbers reflect generalisation to unseen people rather than memorised hands. A FastAPI and React demo accepts an upload or a live webcam feed and synthesises the missing depth channel with Depth-Anything-V2, running inference on CPU.",
+    skills: [
+      "Python",
+      "PyTorch",
+      "Computer Vision",
+      "Multi-Task Learning",
+      "FastAPI",
+      "React",
+    ],
+    repoUrl: "https://github.com/TWWT-ai/RGB-D-Gesture-Recognition",
+    createdAt: "2026-07-03T00:00:00Z", // TODO: real date
+    theme: { color: "#35306b", ink: "light" },
+  },
+  {
+    slug: "simple-claude-code",
+    title: "Simple Claude Code",
+    tagline: "A coding agent that edits files and runs commands until the task is done.",
+    readmeExcerpt:
+      "A from-scratch coding agent in Python: it reads a task, decides which files to open, edits them, runs shell commands, reads the output, and iterates until the job is finished. The interesting part is the loop rather than the model call — deciding when a task is complete, recovering when a command fails, and keeping the working set small enough to stay coherent across turns. Built against the CodeCrafters harness.",
+    skills: ["Python", "LLM APIs", "CLI Tooling", "Agents"],
+    repoUrl: "https://github.com/TWWT-ai/Simple-Claude-code",
+    createdAt: "2026-02-12T00:00:00Z", // TODO: real date — see note below
     theme: { color: "#1f2a37", ink: "light" },
   },
   {
-    slug: "project-three",
-    title: "Third Project",
-    tagline: "One line on what it does.",
+    slug: "http-server",
+    title: "HTTP Server",
+    tagline: "An HTTP/1.1 server written from scratch in Java.",
     readmeExcerpt:
-      "Placeholder. Problem, approach, stack, result — in that order — is the structure recruiters scan for, and it maps cleanly onto how most READMEs already open. Keep the result concrete: a number, a latency figure, a user count, anything measurable beats an adjective.",
-    skills: ["React", "Tailwind", "Vite"],
-    repoUrl: "https://github.com/TWWT-ai",
-    createdAt: "2026-04-18T00:00:00Z",
+      "A working HTTP/1.1 server built directly on TCP sockets, no framework. Parses request lines and headers by hand, writes spec-conformant responses, and handles multiple concurrent clients rather than blocking on one connection at a time. The value is in what it forces you to learn: how a request is actually framed on the wire, where the protocol is strict and where it is forgiving, and what a thread-per-connection model costs. Built against the CodeCrafters challenge.",
+    skills: ["Java", "TCP/Sockets", "HTTP", "Concurrency", "Maven"],
+    repoUrl: "https://github.com/TWWT-ai/HTTP-Server",
+    createdAt: "2026-03-06T00:00:00Z", // TODO
     theme: { color: "#e8b64c" },
   },
   {
-    slug: "project-four",
-    title: "Fourth Project",
-    tagline: "One line on what it does.",
+    slug: "python-powershell",
+    title: "Python PowerShell",
+    tagline: "A shell, reimplemented in Python.",
     readmeExcerpt:
-      "Placeholder. This fourth entry exists to show the grid wrapping to a second row — three per row, newest first. Delete it if you only have three projects; the grid handles any count.",
-    skills: ["Java", "Spring", "MySQL"],
-    repoUrl: "https://github.com/TWWT-ai",
-    createdAt: "2026-01-09T00:00:00Z",
+      "A command shell built from first principles: a REPL that tokenises input, resolves builtins against external executables on PATH, and handles quoting, redirection and piping between processes. Writing one makes concrete a lot of things you otherwise take for granted — how argument parsing actually works, what a shell does versus what the OS does, and why quoting rules are the way they are.",
+    skills: ["Python", "Systems Programming", "Parsing", "Processes"],
+    repoUrl: "https://github.com/TWWT-ai/Python-PowerShell",
+    createdAt: "2026-02-13T00:00:00Z", // TODO
+    theme: { color: "#2b5b84", ink: "light" },
+  },
+  {
+    slug: "pygame-pve",
+    title: "PvE Arena Game",
+    tagline: "A player-versus-enemy game built with Pygame.",
+    readmeExcerpt:
+      "A 2D player-versus-enemy game in Pygame, structured as separate modules rather than one file — player, enemy, weapons, buttons, menu and image effects each own their own behaviour. Covers the parts of game programming that are easy to underestimate: a main loop that keeps input, physics and rendering in step, collision handling, sprite and sound asset management, and menu state that survives restarting a round.",
+    skills: ["Python", "Pygame", "Game Loop", "OOP"],
+    repoUrl: "https://github.com/TWWT-ai/PYGAME-PVE-",
+    createdAt: "2026-03-03T00:00:00Z", // TODO
     theme: { color: "#3f6f52", ink: "light" },
+  },
+  {
+    slug: "robosoc-buggy",
+    title: "Robosoc Buggy",
+    tagline: "Arduino-controlled robotics buggy, programmed in C++.",
+    readmeExcerpt:
+      "Embedded C++ for an Arduino-driven buggy, written for a robotics society project. Real hardware changes the problem: no debugger worth the name, timing that matters, sensor readings that are noisy rather than clean, and motor behaviour that never quite matches the datasheet. Most of the work is the control loop between reading sensors and driving the motors.",
+    skills: ["C++", "Arduino", "Embedded", "Robotics"],
+    repoUrl: "https://github.com/TWWT-ai/Robosoc-Buggy",
+    createdAt: "2026-02-13T00:00:00Z", // TODO
+    theme: { color: "#00979d", ink: "light" },
   },
 ];
 

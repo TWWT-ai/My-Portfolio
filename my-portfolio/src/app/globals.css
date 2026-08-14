@@ -1258,6 +1258,201 @@ body::before {
   transform: translateY(-50%) translateX(0);
 }
 
+
+/* ---------- Resume request modal ------------------------------------------ */
+/* Opened from the home-page CTA. See components/resume_modal.tsx. */
+@keyframes rmBackdropIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rmPanelIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.rm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;                 /* above the fixed nav (10) and menu (9) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(17, 17, 17, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: rmBackdropIn 0.25s ease forwards;
+  overflow-y: auto;
+}
+
+.rm-panel {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  margin: auto;                 /* centres AND allows scroll on short screens */
+  padding: 30px 28px 26px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 26px 70px rgba(17, 17, 17, 0.28);
+  animation: rmPanelIn 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.rm-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(17, 17, 17, 0.06);
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+.rm-close svg { stroke: var(--ink); }
+.rm-close:hover { background: rgba(17, 17, 17, 0.14); }
+
+.rm-eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.rm-title {
+  margin-top: 5px;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.rm-sub {
+  margin-top: 6px;
+  font-size: 13.5px;
+  line-height: 152%;
+  color: var(--muted);
+}
+
+.rm-field {
+  display: block;
+  margin-top: 16px;
+}
+.rm-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  margin-bottom: 5px;
+}
+.rm-field input[type="text"],
+.rm-field input[type="email"] {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid rgba(17, 17, 17, 0.18);
+  border-radius: 10px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.rm-field input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(117, 197, 222, 0.3);
+}
+.rm-field input[aria-invalid="true"] {
+  border-color: #d9534f;
+}
+.rm-field input[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 3px rgba(217, 83, 79, 0.22);
+}
+
+.rm-fieldset { border: none; padding: 0; }
+.rm-choices { display: flex; gap: 10px; margin-top: 2px; }
+.rm-choice {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  border: 1px solid rgba(17, 17, 17, 0.18);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+.rm-choice:hover { border-color: var(--accent); }
+/* :has() lets the whole tile show the checked state without extra JS. */
+.rm-choice:has(input:checked) {
+  border-color: var(--accent);
+  background: rgba(117, 197, 222, 0.16);
+}
+.rm-choice input { accent-color: var(--accent); }
+
+.rm-error {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: #b93b37;
+}
+.rm-formerror {
+  margin-top: 14px;
+  padding: 9px 12px;
+  font-size: 12.5px;
+  line-height: 145%;
+  color: #b93b37;
+  background: rgba(217, 83, 79, 0.1);
+  border-radius: 8px;
+}
+
+/* Honeypot: off-screen rather than display:none, because some bots skip
+   hidden inputs but happily fill positioned ones. */
+.rm-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.rm-submit {
+  width: 100%;
+  margin-top: 20px;
+  padding: 13px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--cream);
+  background: var(--ink);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.25s ease, opacity 0.25s ease;
+}
+.rm-submit:hover:not(:disabled) { background: #000; transform: translateY(-1px); }
+.rm-submit:disabled { opacity: 0.6; cursor: default; }
+
+.rm-fineprint {
+  margin-top: 12px;
+  font-size: 11.5px;
+  line-height: 145%;
+  color: var(--muted);
+  text-align: center;
+}
+
+.rm-done { text-align: center; padding: 10px 0; }
+.rm-done .rm-sub { margin-bottom: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rm-backdrop, .rm-panel { animation: none !important; opacity: 1 !important; transform: none !important; }
+}
+
 /* ---------- Reduced motion ------------------------------------------------ */
 /* Everything lands in its final state immediately. The spotlight loop is also
    skipped in JS (see hero.tsx), so no mask is applied either. */

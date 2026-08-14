@@ -13,7 +13,8 @@
  *      * `#hero-reveal-img` — the real avatar (public/avatar.jpg), painted on
  *                             top and masked so it is only visible inside a
  *                             soft circle that follows the cursor.
- *  - Renders the headline, CTA, and the four clickable section cards down the
+ *  - Renders the headline, the "Get my resume" CTA (which opens
+ *    <ResumeModal />), and the four clickable section cards down the
  *    left-hand side. Cards come from `src/lib/sections.ts`, the same array the
  *    burger menu uses, so the two navigations always match.
  *
@@ -34,8 +35,9 @@
  */
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SECTIONS } from "@/lib/sections";
+import ResumeModal from "@/components/resume_modal";
 
 /** Radius of the reveal circle, in CSS pixels. */
 const SPOTLIGHT_RADIUS = 260;
@@ -43,6 +45,7 @@ const SPOTLIGHT_RADIUS = 260;
 const SPOTLIGHT_EASING = 0.1;
 
 export default function Hero() {
+  const [resumeOpen, setResumeOpen] = useState(false);
   const mediaRef = useRef<HTMLDivElement>(null);
   const revealRef = useRef<HTMLDivElement>(null);
 
@@ -195,13 +198,20 @@ export default function Hero() {
               TypeScript, Next.js and PostgreSQL.
             </p>
 
-            <Link href="/contact" className="cta-btn cta-animate">
-              {/* <span className="cta-btn-bg" /> */}
-              {/* <span className="cta-btn-text">Start a project now</span>
+            {/* Was a commented-out <Link> to /contact. Now the resume CTA:
+                same pill styling, but a <button> rather than a link because it
+                opens a dialog instead of navigating. */}
+            <button
+              type="button"
+              className="cta-btn cta-animate"
+              onClick={() => setResumeOpen(true)}
+            >
+              <span className="cta-btn-bg" />
+              <span className="cta-btn-text">Get my resume</span>
               <span className="cta-btn-circle">
                 <ArrowIcon size={18} stroke="white" />
-              </span> */}
-            </Link>
+              </span>
+            </button>
 
             {/* The four redirecting boxes. Each is a full <Link> to its own
                 page — the pages themselves are separate files and were left
@@ -234,6 +244,8 @@ export default function Hero() {
           </div>
         </div>
       </section>
+
+      <ResumeModal open={resumeOpen} onClose={() => setResumeOpen(false)} />
     </>
   );
 }
