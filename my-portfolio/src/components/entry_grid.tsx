@@ -67,6 +67,7 @@ export default function EntryGrid({
     if (!theme) {
       root.style.setProperty("--page-bg", RESTING.bg);
       root.style.setProperty("--page-ink", RESTING.ink);
+      root.style.setProperty("--page-accent", "var(--accent-ink)");
       root.style.setProperty("--page-image", RESTING.image);
       root.style.setProperty("--page-image-opacity", "0");
       return;
@@ -75,6 +76,19 @@ export default function EntryGrid({
     root.style.setProperty(
       "--page-ink",
       theme.ink === "light" ? "var(--cream)" : RESTING.ink,
+    );
+    /**
+     * The accent used AS TEXT has to flip with the theme, exactly like the ink.
+     *
+     * --accent-ink is a dark teal chosen to clear 4.5:1 on the pale default
+     * background. Drop that onto a DARK project theme and it is unreadable —
+     * the contrast fix would have recreated the very problem it was meant to
+     * solve, just on a different background. On a dark theme this goes back to
+     * the bright --accent, which is what passes there.
+     */
+    root.style.setProperty(
+      "--page-accent",
+      theme.ink === "light" ? "var(--accent)" : "var(--accent-ink)",
     );
     root.style.setProperty(
       "--page-image",

@@ -30,7 +30,31 @@
   --ink: #111111;     /* primary text                          */
   --cream: #f4f1e8;   /* burger fill + oversized backdrop word  */
   --accent: #75c5de;  /* splash blocks, CTA circle, card hover  */
-  --muted: #6b6b6b;   /* descriptions and secondary copy        */
+
+  /**
+   * ACCESSIBILITY — the accent blue is a FILL colour, not a text colour.
+   *
+   * #75c5de on the #f7f7f7 card measures 1.82:1. WCAG AA wants 4.5:1 for body
+   * text, so it was failing by a wide margin — the "01 / 02 / 03 / 04" card
+   * indices were close to invisible for anyone with reduced contrast
+   * sensitivity, and honestly hard to read on a bright screen for everyone.
+   *
+   * Rather than darken --accent (which would dull the splash blocks, the CTA
+   * circle and the card hover flood, none of which carry text and all of which
+   * are fine as they are), this is a second token for the few places the accent
+   * is used AS TEXT. Same hue (194 deg) and saturation, lightness dropped from
+   * 66% to 32%, which measures 5.54:1 on the card and 4.67:1 on the page field
+   * — it passes on both surfaces the cards can sit against.
+   */
+  --accent-ink: #1f6c84;
+
+  /**
+   * Darkened from #6b6b6b. On the #e4e4e4 page field that measured 4.19:1,
+   * just under the 4.5:1 AA threshold, which is what Lighthouse flagged on
+   * .hero-sub. #5f5f5f gives 5.02:1 there and 5.96:1 on the cards, so every
+   * surface --muted lands on now has headroom rather than sitting on the line.
+   */
+  --muted: #5f5f5f;   /* descriptions and secondary copy        */
 
   /* Height of the global footer. The hero subtracts this from 100vh so the
      home page fits exactly one viewport. Keep in sync with footer.tsx. */
@@ -41,6 +65,9 @@
      Everything that must stay legible over a dark theme reads --page-ink. */
   --page-bg: var(--bg);
   --page-ink: var(--ink);
+  /* Accent used AS TEXT. Flips with the theme — EntryGrid swaps it to the
+     bright --accent on dark themes, where the dark teal would be unreadable. */
+  --page-accent: var(--accent-ink);
   --page-image: none;
   --page-image-opacity: 0;
 }
@@ -195,69 +222,152 @@ body::before {
   animation: creatorSlideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 1.5s forwards;
 }
 
-/* ---------- Primary CTA --------------------------------------------------- */
-/* The white pill grows to swallow the accent circle on hover, and the circle
-   slides left to meet it. */
+/* ---------- Primary CTA (collapse-and-reveal) ------------------------------ */
+/* At rest: a white pill reading "Get my resume" on an accent field.
+   On hover: the pill collapses to zero width, uncovering "Download" and a
+   downward arrow on the accent underneath.
+
+   Replaced the previous white-pill-plus-accent-circle. The up-right arrow is
+   gone entirely — it pointed away, which was always slightly wrong for a
+   control that downloads a file rather than navigating somewhere.
+
+   THE LAYOUT IS A ONE-CELL GRID, and the reason matters. The button must not
+   change size when the label collapses, or the four cards below it would jump.
+   So the width comes from .cta-sizer, an invisible copy of the label that is
+   never animated, while .cta-label is taken out of flow with position:absolute
+   and is free to shrink to nothing. .cta-reveal shares the same grid cell, so
+   if its text were ever the wider of the two the button would size to that
+   instead. Nothing here is a hard-coded pixel width. */
 .cta-btn {
   position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
+  display: grid;
+  place-items: center;
   border: none;
-  background: none;
   cursor: pointer;
   border-radius: 9999px;
-  padding: 8px;
-  gap: 12px;
+  padding: 6px;
+  background: var(--accent);
   text-decoration: none;
+  overflow: hidden;
 }
-.cta-btn-bg {
-  position: absolute;
-  top: 5px;
-  bottom: 5px;
-  left: 8px;
-  width: calc(100% - 8px - 8px - 48px - 12px);
-  border-radius: 9999px;
-  background: #fff;
-  z-index: 0;
-  transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-.cta-btn:hover .cta-btn-bg { width: calc(100% - 16px); }
-.cta-btn-text {
-  position: relative;
-  z-index: 1;
-  color: var(--ink);
-  font-weight: 500;
+
+/* Invisible width ruler. `visibility: hidden` rather than `opacity: 0` so it
+   is out of the accessibility tree AND cannot be clicked, while still taking
+   up space — which is the entire point of it. */
+.cta-sizer,
+.cta-reveal {
+  grid-area: 1 / 1;
+  /* 33px, not 32px — the horizontal padding here IS the button's width, so a
+     1px bump each side widens the whole control by exactly 2px. */
+  padding: 12px 33px;
   font-size: 16px;
-  padding: 12px 32px;
+  font-weight: 500;
   white-space: nowrap;
 }
-.cta-btn-circle {
-  position: relative;
+.cta-sizer {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.cta-reveal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+  /* Starts slightly low and fades up as the pill clears it, so the two halves
+     of the animation feel like one movement rather than a hard swap. */
+  opacity: 0;
+  transform: translateY(5px);
+  transition: opacity 0.3s ease 0.08s, transform 0.35s ease 0.08s;
+}
+.cta-btn:hover .cta-reveal,
+.cta-btn:focus-visible .cta-reveal {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* A small settle on the arrow once the text has arrived — it reads as "down"
+   more clearly in motion than it does standing still. */
+.cta-btn:hover .cta-arrow,
+.cta-btn:focus-visible .cta-arrow {
+  animation: ctaArrowNudge 1.1s ease-in-out 0.35s infinite;
+}
+@keyframes ctaArrowNudge {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(3px); }
+}
+
+/* The visible pill. Absolute, so its width can animate without the grid — and
+   therefore the button — resizing underneath it. Anchored left so it retracts
+   leftward and wipes the reveal into view. */
+/* The visible pill. Absolute, so its width can animate without the grid — and
+   therefore the button — resizing underneath it.
+
+   PARTS FROM THE CENTRE. It used to be anchored `left: 6px`, so it retracted
+   leftward and uncovered the accent from the right edge only, which read as
+   the label sliding away rather than opening. Centring it with
+   `left: 50%` + `translateX(-50%)` means shrinking the width pulls both edges
+   inward at the same rate, so the reveal wipes in from both sides at once.
+
+   `justify-content: center` matters here too: with the pill narrowing
+   symmetrically, a left-aligned label would clip only its right-hand
+   characters and look lopsided on the way out. Centred, the text closes in
+   from both ends in step with the pill. */
+.cta-label {
+  position: absolute;
   z-index: 1;
+  top: 6px;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 12px);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--accent);
-  flex-shrink: 0;
-  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border-radius: 9999px;
+  background: #fff;
+  overflow: hidden;
+  /* Width only — deliberately NO opacity fade. Fading the pill while it
+     narrows left a translucent white smudge sitting on top of the word
+     "Download" for the middle third of the animation. Kept opaque, it reads as
+     a pair of shutters parting to uncover the text, which is the effect this
+     is going for. It ends at zero width, so it disappears regardless. */
+  transition: width 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-.cta-btn:hover .cta-btn-circle { transform: translateX(-7px); }
+.cta-btn:hover .cta-label,
+.cta-btn:focus-visible .cta-label {
+  width: 0;
+}
+/* Separate element so the text clips at the pill's edge instead of reflowing
+   as the pill narrows. */
+.cta-label-text {
+  padding: 12px 33px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+/* Keyboard users get the same reveal as mouse users (see :focus-visible
+   above), plus a ring — without it the reveal would be the ONLY focus
+   indicator, which disappears the moment the pointer moves. */
+.cta-btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
 
 @media (min-width: 768px) {
-  .cta-btn-bg { width: calc(100% - 8px - 8px - 54px - 12px); }
-  .cta-btn-text { font-size: 18px; padding: 16px 40px; }
-  .cta-btn-circle { width: 54px; height: 54px; }
+  .cta-sizer,
+  .cta-reveal { padding: 16px 41px; font-size: 18px; }
+  .cta-label-text { padding: 16px 41px; font-size: 18px; }
 }
 /* Desktop trims it again: the 768px sizing above is ~70px tall, which is the
    single biggest block of vertical space competing with the four cards. */
 @media (min-width: 900px) {
-  .cta-btn-bg { width: calc(100% - 8px - 8px - 46px - 12px); }
-  .cta-btn-text { font-size: 16px; padding: 13px 32px; }
-  .cta-btn-circle { width: 46px; height: 46px; }
+  .cta-sizer,
+  .cta-reveal { padding: 13px 33px; font-size: 16px; }
+  .cta-label-text { padding: 13px 33px; font-size: 16px; }
 }
 
 /* ---------- Menu CTA (same pill, smaller) --------------------------------- */
@@ -528,27 +638,88 @@ body::before {
 }
 
 /* Both image layers share this box so the spotlight reveal registers exactly.
-   Swapping the base image? Match public/avatar.jpg's 900x1072 aspect ratio. */
+   Swapping the base image? Match public/avatar.jpg's 900x1072 aspect ratio.
+
+   PERFORMANCE REWRITE. These were `background-image` and are now <Image fill>
+   from next/image — see the long comment in components/hero.tsx for why (526 KB
+   of images and a 5.3s LCP). The geometry below is a deliberate one-for-one
+   translation of the CSS that used to be here, NOT a redesign:
+
+     background-size: contain            ->  object-fit: contain
+     background-position: center bottom  ->  object-position: center bottom
+     background-size: auto 96% (desktop) ->  4% top inset on the box
+     background-position: 82% bottom     ->  object-position: 82% 100%
+
+   The 96% height becomes an inset on the BOX rather than a size on the image,
+   because object-fit has no "auto height" equivalent. Inside a box that is 96%
+   tall, a portrait image in a landscape container is height-constrained, so
+   `contain` resolves to exactly the same rendered size. Percentage
+   object-position uses the same formula as background-position, so 82% lands
+   the image in the identical spot. Verified by pixel-diffing the hero before
+   and after the change. */
 .hero-layer {
   position: absolute;
   inset: 0;
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center bottom;
 }
 @media (min-width: 900px) {
-  .hero-layer { background-position: 82% bottom; background-size: auto 96%; }
+  /* The old `background-size: auto 96%`, expressed as a box the image fills. */
+  .hero-layer { inset: 4% 0 0 0; }
 }
+
+/* The <Image fill> inside each layer. next/image handles position and inset
+   itself; this only controls how the picture sits in the box it is given. */
+.hero-img {
+  object-fit: contain;
+  object-position: center bottom;
+}
+@media (min-width: 900px) {
+  .hero-img { object-position: 82% 100%; }
+}
+
 .hero-base-img {
   z-index: 5;
-  background-image: url("/penguin.png");
 }
 .hero-reveal-img {
   z-index: 7;
   pointer-events: none;
-  background-image: url("/avatar.jpg");
-  /* mask-image is written per-frame by the spotlight loop in hero.tsx.
-     With no mask (touch / reduced motion) this layer simply shows in full. */
+
+  /* Spotlight centre. hero.tsx writes these two properties per frame; parked
+     off-screen so nothing is revealed until the cursor actually moves. */
+  --spot-x: -9999px;
+  --spot-y: -9999px;
+  --spot-r: 260px;
+}
+
+/* THE MASK IS PLAIN CSS NOW — it used to be a PNG data URL re-encoded from a
+   canvas on every frame, which cost 9.35ms each time (see the long comment in
+   components/hero.tsx). Same soft-edged circle, none of the encode.
+
+   Only applied once the class is added in JS, so the portrait stays fully
+   visible for touch devices, reduced-motion users, and anyone whose JS did not
+   run — a masked layer with no script to move it would hide the image
+   permanently.
+
+   A mask clips descendants, so the <Image> inside this layer is revealed
+   exactly as the background used to be. */
+.hero-reveal-img.spotlight-on {
+  -webkit-mask-image: radial-gradient(
+    circle var(--spot-r) at var(--spot-x) var(--spot-y),
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 40%,
+    rgba(0, 0, 0, 0.75) 60%,
+    rgba(0, 0, 0, 0.4) 75%,
+    rgba(0, 0, 0, 0.12) 88%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: radial-gradient(
+    circle var(--spot-r) at var(--spot-x) var(--spot-y),
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 40%,
+    rgba(0, 0, 0, 0.75) 60%,
+    rgba(0, 0, 0, 0.4) 75%,
+    rgba(0, 0, 0, 0.12) 88%,
+    rgba(0, 0, 0, 0) 100%
+  );
 }
 
 .hero-content {
@@ -709,7 +880,9 @@ body::before {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--accent);
+  /* --accent-ink, not --accent: at 11px this is body text and has to clear
+     4.5:1. See the token definition at the top of this file. */
+  color: var(--accent-ink);
   transition: color 0.5s cubic-bezier(0.23, 1, 0.32, 1);
 }
 /* The index is accent-coloured at rest, so it would vanish once the accent
@@ -787,9 +960,9 @@ body::before {
   .section-cards { gap: 6px; }
   .section-card { padding: 8px 44px 8px 13px; }
   .section-card .sc-desc { font-size: 12px; }
-  .cta-btn-text { padding: 11px 30px; }
-  .cta-btn-circle { width: 42px; height: 42px; }
-  .cta-btn-bg { width: calc(100% - 8px - 8px - 42px - 12px); }
+  .cta-sizer,
+  .cta-reveal { padding: 11px 31px; }
+  .cta-label-text { padding: 11px 31px; }
 }
 
 @media (min-width: 900px) and (max-height: 690px) {
@@ -812,10 +985,12 @@ body::before {
   .section-card:hover .sc-arr-2 { left: 12px; }
   .section-card:hover .sc-content { transform: translateX(20px); }
 
-  .cta-btn { padding: 6px; gap: 10px; }
-  .cta-btn-text { font-size: 15px; padding: 10px 28px; }
-  .cta-btn-circle { width: 40px; height: 40px; }
-  .cta-btn-bg { width: calc(100% - 6px - 6px - 40px - 10px); }
+  .cta-btn { padding: 5px; }
+  .cta-sizer,
+  .cta-reveal { font-size: 15px; padding: 10px 29px; }
+  /* left stays 50% so the pill still parts from the centre at this size. */
+  .cta-label { top: 5px; bottom: 5px; width: calc(100% - 10px); }
+  .cta-label-text { font-size: 15px; padding: 10px 29px; }
 }
 
 
@@ -891,7 +1066,10 @@ body::before {
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--accent);
+  /* Was --accent, which measured 1.52:1 on the page field — the worst contrast
+     failure on the site. --page-accent is the readable variant, and it flips
+     back to the bright accent on dark project themes. */
+  color: var(--page-accent);
 }
 .page-title {
   margin-top: 6px;
@@ -916,6 +1094,10 @@ body::before {
    capped at the space left below the header and above the footer, and scrolls
    internally instead of growing the page. */
 .entry-panel {
+  /* Above the sprite layer (z-index 0) — the floaters live in the gutters, but
+     a stacking context here guarantees none can ever cross a card. */
+  position: relative;
+  z-index: 1;
   border: 1px solid rgba(17, 17, 17, 0.12);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.42);
@@ -971,7 +1153,10 @@ body::before {
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--accent);
+  /* Was --accent: 1.91:1 on the #fdfdfd card. The card itself stays pale on
+     every theme, so this one does not need the flipping variant — but it uses
+     it anyway so the two eyebrow-style labels cannot drift apart. */
+  color: var(--accent-ink);
 }
 .entry-title {
   margin-top: 4px;
@@ -1037,7 +1222,10 @@ body::before {
   text-underline-offset: 3px;
   transition: color 0.3s ease;
 }
-.entry-more:hover { color: var(--accent); }
+/* Accent as text -> the readable variant. Hover states are not audited
+   automatically, but a link that becomes HARDER to read when you point at it
+   is a bug whether or not a tool reports it. */
+.entry-more:hover { color: var(--accent-ink); }
 
 .entry-skills {
   display: flex;
@@ -1069,7 +1257,7 @@ body::before {
   text-underline-offset: 3px;
   transition: color 0.3s ease;
 }
-.entry-links a:hover { color: var(--accent); }
+.entry-links a:hover { color: var(--accent-ink); }
 
 .entry-empty {
   padding: 40px;
@@ -1078,12 +1266,17 @@ body::before {
 }
 
 /* ---------- About --------------------------------------------------------- */
-.about-page { max-width: 900px; }
+.about-page { max-width: 1040px; }
 
+/* Widened from 640px because the prose now shares its line with a picture.
+   640 was the right measure for a lone column; keeping it while adding a
+   240px image beside it would have squeezed the text to ~380px, which is too
+   narrow to read comfortably. The TEXT still lands near 600px inside the row
+   (see .about-row) — the column got wider, the line length did not. */
 .about-prose {
   position: relative;
   z-index: 1;
-  max-width: 640px;
+  max-width: 900px;
   margin: 0 auto;
 }
 .about-prose p {
@@ -1109,7 +1302,108 @@ body::before {
   text-underline-offset: 3px;
   transition: color 0.3s ease;
 }
-.about-prose a:hover { color: var(--accent); }
+.about-prose a:hover { color: var(--accent-ink); }
+
+/* ---------- About: alternating paragraph figures -------------------------- */
+/* One picture per body paragraph, left / right / left / right down the page.
+
+   MOBILE FIRST, AND THE STACK IS THE IMPORTANT CASE. Side-by-side needs about
+   900px to work; below that the image goes above its paragraph at full width.
+   `order` is not used here — the figure is first in the DOM, which is also the
+   order it should be read in when stacked. */
+.about-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 30px;
+}
+.about-row .about-row-text p { margin-top: 0; }
+
+.about-figure {
+  margin: 0;
+  /* Capped and centred on mobile. A full-width picture rotated 10deg has a
+     bounding box ~11% wider than the picture itself, which pushed 1px past the
+     viewport and put a horizontal scrollbar on the page. Narrower also simply
+     looks better stacked — a full-bleed tilted photo reads as a mistake. */
+  max-width: 300px;
+  margin-inline: auto;
+  /* The gentle float. Small on purpose — 6px over 7-9s, staggered per row from
+     the component. This sits beside text people are trying to READ; a bigger
+     amplitude reads as a distraction in peripheral vision rather than life. */
+  animation-name: figureFloat;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+  will-change: transform;
+}
+/* THE TILT LIVES ON THE <img>, NOT THE <figure>.
+   The figure owns the float animation, and an animation's `transform` wins over
+   a static one on the same element — putting the rotation there would simply be
+   erased on the first frame. Splitting them lets both run: the figure
+   translates, the picture inside it leans. */
+.about-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(17, 17, 17, 0.1);
+  /* Sources are 4:3. A replacement of a different ratio letterboxes inside the
+     frame instead of resizing it, so the rhythm down the page holds. */
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: #eceae4;
+  transition: transform 0.4s ease;
+}
+.about-row-left .about-figure img { transform: rotate(-10deg); }
+.about-row-right .about-figure img { transform: rotate(10deg); }
+
+/* Source credit. The tilt is applied to the <img> alone, NOT the <figure>, so
+   this caption stays level while the picture above it leans. That is the point:
+   a tilted photo reads as a choice, a tilted caption reads as a mistake. */
+.about-credit {
+  margin-top: 14px;
+  font-size: 11.5px;
+  line-height: 145%;
+  color: var(--muted);
+}
+.about-credit a {
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.about-credit a:hover { color: var(--accent-ink); }
+
+@keyframes figureFloat {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+@media (min-width: 900px) {
+  .about-row {
+    grid-template-columns: 240px 1fr;
+    gap: 34px;
+    align-items: center;
+    /* Was 44px. A 240x180 box rotated 10deg has a bounding box ~28px wider and
+       ~39px taller, so without the extra room the corners of one row would
+       clip into the next and into the text beside it. */
+    margin-top: 62px;
+  }
+  .about-figure { padding: 22px 16px; max-width: none; margin-inline: 0; }
+  /* Right-hand rows swap the track order AND place the figure in column 2.
+     Both halves are needed: the template alone would move the space, and the
+     explicit column alone would leave a 240px gap on the wrong side. */
+  .about-row-right {
+    grid-template-columns: 1fr 240px;
+  }
+  .about-row-right .about-figure {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .about-row-right .about-row-text {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
 
 /* Floating 16px pixel sprites. The layer covers the page but never intercepts
    clicks; each sprite gets one of four motion paths from pixel_sprites.tsx. */
@@ -1162,6 +1456,8 @@ body::before {
 .contact-page { max-width: 1120px; }
 
 .contact-split {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: 1fr;
   gap: 40px;
@@ -1204,7 +1500,11 @@ body::before {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--page-ink);
-  opacity: 0.45;
+  /* Was 0.45, which renders #111 over the page field as #858585 — 2.9:1,
+     well under AA. 0.72 keeps it clearly secondary to the text above while
+     measuring past 4.5:1. Opacity rather than a fixed grey so it still flips
+     with --page-ink. */
+  opacity: 0.72;
 }
 
 .contact-list { list-style: none; }
@@ -1232,7 +1532,9 @@ body::before {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--accent);
+  /* Last of the accent-as-text failures: 1.52:1 on the page field. Same fix as
+     .page-eyebrow — see --accent-ink at the top of this file. */
+  color: var(--page-accent);
 }
 .contact-value {
   font-size: 17px;
@@ -1318,7 +1620,10 @@ body::before {
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--accent);
+  /* Accent as text on the modal's white panel — same 4.5:1 problem as the page
+     eyebrows, just somewhere Lighthouse cannot reach it (the dialog is closed
+     when the audit runs). Fixed by hand for the same reason. */
+  color: var(--accent-ink);
 }
 .rm-title {
   margin-top: 5px;
@@ -1447,6 +1752,33 @@ body::before {
 }
 
 .rm-done { text-align: center; padding: 10px 0; }
+/* Dev-only diagnostic panel in the success state. Never rendered in
+   production — the API omits the `debug` block that triggers it. */
+.rm-devnote {
+  margin-top: 14px;
+  padding: 10px 12px;
+  text-align: left;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  line-height: 152%;
+  color: #7a4a12;
+  background: #fdf3e3;
+  border: 1px dashed #e0b062;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.rm-manual {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.rm-manual a {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .rm-done .rm-sub { margin-bottom: 4px; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1460,6 +1792,8 @@ body::before {
   .splash { animation: splashHide 0.01s linear forwards; }
   .splash-box { animation: none !important; }
   .about-sprite { animation: none !important; }
+  .about-figure { animation: none !important; }
+  .about-figure img { transition: none !important; }
 
   .section-card,
   .section-card .sc-circle,
@@ -1472,6 +1806,21 @@ body::before {
   .section-card:hover .sc-circle { width: 20px; height: 20px; opacity: 0; }
   .section-card:hover .sc-content { transform: none; }
   .section-card:hover { border-color: var(--accent); }
+
+  /* Resume CTA: the swap still happens, it just happens instantly. Killing the
+     reveal outright would leave hover doing nothing at all, which is worse —
+     reduced-motion means "do not animate", not "do not respond". The looping
+     arrow nudge does go, though: a permanent idle bounce is exactly the kind of
+     thing the setting exists to stop. */
+  .cta-label,
+  .cta-reveal {
+    transition: none !important;
+  }
+  .cta-reveal { transform: none !important; }
+  .cta-btn:hover .cta-arrow,
+  .cta-btn:focus-visible .cta-arrow {
+    animation: none !important;
+  }
 
   .hero-image-animate,
   .word-reveal,

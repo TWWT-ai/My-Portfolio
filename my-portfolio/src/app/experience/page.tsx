@@ -12,6 +12,7 @@
  */
 
 import EntryGrid, { type Entry } from "@/components/entry_grid";
+import { FloatingSprites } from "@/components/pixel_sprites";
 import { experienceByNewest } from "@/lib/experience";
 
 export const metadata = {
@@ -32,6 +33,8 @@ export default function ExperiencePage() {
 
   return (
     <main className="page">
+      <FloatingSprites set="experience" />
+
       <div className="page-head">
         <span className="page-eyebrow">03 — Experience</span>
         <h1 className="page-title">Experience</h1>

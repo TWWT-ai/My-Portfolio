@@ -44,7 +44,14 @@ export default function NavBar() {
   return (
     <>
       <div className="logo-wrapper">
-        <Link href="/" className="logo-link" aria-label="Temuulen Wang — home">
+        {/* ACCESSIBILITY — label-content-name-mismatch.
+            The accessible name was "Temuulen Wang — home" while the visible
+            text is "TW" on phones, because .logo-text is display:none below
+            768px. A name that does not contain the visible label breaks voice
+            control: a user looking at "TW" and saying "click TW" would not
+            match anything. The name now contains BOTH strings, so it holds on
+            either side of the breakpoint. */}
+        <Link href="/" className="logo-link" aria-label="TW — Temuulen Wang, home">
           <span className="logo-mark">TW</span>
           <span className="logo-text">Temuulen Wang</span>
         </Link>

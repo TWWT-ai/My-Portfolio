@@ -22,6 +22,7 @@
  */
 
 import LocalTime from "@/components/local_time";
+import { FloatingSprites } from "@/components/pixel_sprites";
 
 /** IANA zone, not an offset — that is the whole point. */
 const TIME_ZONE = "Europe/London";
@@ -44,7 +45,7 @@ const DETAILS = [
     href: "https://www.linkedin.com/in/temuulen-wang/",
   },
   {
-    label: "Phone",
+    label: "Mobile",
     value: "+44 7756 903026",
     href: "tel:+447756903026",
   },
@@ -58,6 +59,8 @@ export const metadata = {
 export default function ContactPage() {
   return (
     <main className="page contact-page">
+      <FloatingSprites set="contact" />
+
       <div className="contact-split">
         <div className="contact-statement">
           <span className="page-eyebrow">04 — Contact</span>
@@ -67,7 +70,7 @@ export default function ContactPage() {
             something.
           </h1>
           <p className="contact-sub">
-            Open to graduate and junior full-stack roles, freelance work, and
+            Open to internships and junior full-stack roles, freelance work, and
             interesting problems generally. I reply to everything.
           </p>
           <LocalTime timeZone={TIME_ZONE} place={PLACE} />

@@ -4,8 +4,14 @@
  * ADDED — the "Get my resume" dialog, opened from the home-page CTA.
  *
  * Collects: name / company, position, email, and whether they want an
- * interview. Posts to /api/resume, which stores the request and sends two
- * emails (notification to Temuulen, resume to the requester).
+ * interview. Posts to /api/resume, which stores the request, emails Temuulen,
+ * and returns the resume URL.
+ *
+ * DELIVERY: the download starts in the browser as soon as the POST succeeds.
+ * That is the primary path — Resend cannot email a stranger until a domain is
+ * verified, and waiting on an inbox is worse UX anyway. The success screen
+ * also shows a manual download link, because a programmatic click can be
+ * blocked and a dead end here would be the worst possible moment for one.
  *
  * Validation runs through the SAME `validateResumeRequest` the API route uses
  * (src/lib/resume_request.ts). The client pass is a courtesy for instant
@@ -36,6 +42,22 @@ import {
 
 type Status = "idle" | "sending" | "sent" | "error";
 
+/**
+ * Start the download without navigating away from the dialog.
+ * `download` only takes effect same-origin, which /resume/*.pdf is; for an
+ * off-site RESUME_URL the target="_blank" fallback opens it instead.
+ */
+function triggerDownload(url: string) {
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "";
+  a.target = "_blank";
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
 export default function ResumeModal({
   open,
   onClose,
@@ -51,6 +73,14 @@ export default function ResumeModal({
   const [errors, setErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
+  const [resumeUrl, setResumeUrl] = useState<string | null>(null);
+  /**
+   * Dev-only. The API includes a `debug` block outside production; its presence
+   * is how the client knows it is safe to show. Surfaced in the UI because
+   * "the email did not arrive" is otherwise only diagnosable from the terminal,
+   * and Resend's rejection message names the exact cause.
+   */
+  const [devNote, setDevNote] = useState<string | null>(null);
 
   const panelRef = useRef<HTMLDivElement>(null);
   const firstFieldRef = useRef<HTMLInputElement>(null);
@@ -111,6 +141,8 @@ export default function ResumeModal({
     setErrors({});
     setStatus("idle");
     setMessage("");
+    setResumeUrl(null);
+    setDevNote(null);
   };
 
   async function onSubmit(e: React.FormEvent) {
@@ -150,7 +182,33 @@ export default function ResumeModal({
       }
 
       setStatus("sent");
-      setMessage(json.message ?? "Sent. Check your inbox.");
+      setMessage(json.message ?? "Your download is starting.");
+
+      // Dev diagnostics. Reports BOTH sends separately — the first version only
+      // showed the owner notification, which made "the requester never got it"
+      // look like a silent failure when it is in fact a documented sandbox limit.
+      if (json.debug) {
+        const d = json.debug;
+        const lines = [
+          d.notifyError
+            ? `✗ Notification to ${d.to} FAILED\n  ${d.notifyError}`
+            : `✓ Notification accepted by Resend for ${d.to}.`,
+          d.requesterError
+            ? `${d.requesterError.startsWith("disabled:") ? "⊘" : "✗"} Copy to ${d.requester} not sent\n  ${d.requesterError}`
+            : `✓ Copy accepted by Resend for ${d.requester}.`,
+        ];
+        if (d.sandboxSender) {
+          lines.push(
+            `ℹ Sending from ${d.from} — Resend sandbox. Delivery is limited to ${d.to} until a domain is verified.`,
+          );
+        }
+        setDevNote(lines.join("\n\n"));
+      }
+
+      if (json.resumeUrl) {
+        setResumeUrl(json.resumeUrl as string);
+        triggerDownload(json.resumeUrl as string);
+      }
     } catch {
       setStatus("error");
       setMessage("Network error. Please try again, or email me directly.");
@@ -195,11 +253,30 @@ export default function ResumeModal({
 
         {status === "sent" ? (
           <div className="rm-done">
-            <span className="rm-eyebrow">Sent</span>
+            <span className="rm-eyebrow">Done</span>
             <h2 id="rm-title" className="rm-title">
-              On its way.
+              Here it is.
             </h2>
             <p className="rm-sub">{message}</p>
+
+            {/* Manual fallback: a blocked programmatic click must not leave
+                them with nothing. */}
+            {resumeUrl && (
+              <p className="rm-manual">
+                Didn&apos;t start?{" "}
+                <a href={resumeUrl} download target="_blank" rel="noopener noreferrer">
+                  Download it here
+                </a>
+                .
+              </p>
+            )}
+
+            {devNote && (
+              <pre className="rm-devnote" aria-label="Development diagnostic">
+                {devNote}
+              </pre>
+            )}
+
             <button
               type="button"
               className="rm-submit"
@@ -217,8 +294,13 @@ export default function ResumeModal({
             <h2 id="rm-title" className="rm-title">
               Get my resume
             </h2>
+            {/* COPY CHANGED — this used to read "…and I'll send it straight to
+                your inbox", which promised an email that does not go out while
+                the requester copy is disabled. Never promise delivery on a
+                channel that is switched off; the download is what actually
+                happens, so that is what it says. */}
             <p className="rm-sub">
-              Tell me who you are and I&apos;ll send it straight to your inbox.
+              Tell me who you are and the download will start straight away.
             </p>
 
             <label className="rm-field">
