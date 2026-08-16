@@ -1,5 +1,6 @@
 /**
- * ADDED — role and education data for /experience.
+ * Role and education data for /experience. REAL CONTENT — taken from the CV in
+ * public/resume/, so the two say the same thing to the same recruiter.
  *
  * Intentionally the SAME SHAPE as Project in ./projects.ts, because /experience
  * reuses the exact grid, hover-background and reveal-on-hover mechanics. The
@@ -13,12 +14,29 @@
  *   period   -> "2024 — Present"; display only, never sorted on
  *   summary  -> the ~100-word write-up (Project calls this readmeExcerpt)
  *   skills   -> what you actually used
- *   createdAt-> start date, ISO 8601. Sort key, newest first.
+ *   createdAt-> START date, ISO 8601. Sort key, newest first.
  *
- * Achievement bullets belong in `summary` as prose with concrete numbers —
- * "cut API response time 40% with Redis caching" beats "worked on performance".
+ * WHY THE ORDER LOOKS LIKE IT DOES. Sorting is on `createdAt`, the start date,
+ * so Manchester (Sep 2025) sits above UCL (Jun 2025) even though UCL finished
+ * first. That is the convention on a CV and it keeps the newest thing you began
+ * at the top. If you would rather sort on end date, that is a change to
+ * experienceByNewest() at the bottom of this file, not to the data.
  *
- * REPLACE ALL OF THIS with your real history; it is placeholder content.
+ * Bullets from the CV are rewritten as prose here, because the card reveals a
+ * paragraph rather than a list — but every number survives the translation
+ * intact. Do not soften them; the numbers are the whole point.
+ *
+ * PICKING A `theme.color`: GO CLEARLY DARK OR CLEARLY LIGHT, NOT MID-TONE.
+ *
+ * Hovering a card repaints the whole page in its theme, and the page eyebrow
+ * ("03 — EXPERIENCE") is drawn in an accent that flips with `ink` — the bright
+ * blue on dark themes, the deep teal on light ones. A mid-tone background is
+ * too dark for one and too light for the other, so neither clears 4.5:1. Three
+ * of these five were originally mid-tones and measured 2.99, 3.05 and 3.18:1;
+ * they are darkened/lightened here to 4.7-4.8:1 worst case.
+ *
+ * Lighthouse will not catch this — it never hovers anything. Check by hand, or
+ * keep every colour either above roughly 78% or below 35% lightness.
  */
 
 import type { ProjectTheme } from "./projects";
@@ -36,47 +54,59 @@ export type Experience = {
   period: string;
   summary: string;
   skills: string[];
-  /** ISO 8601 start date. Sort key — newest first. */
+  /** ISO 8601 START date. Sort key — newest first. */
   createdAt: string;
   theme: ProjectTheme;
 };
 
 export const EXPERIENCE: Experience[] = [
   {
-    slug: "current-role",
+    slug: "ucl-ml-assistant",
     kind: "work",
-    title: "Your Role Here",
-    tagline: "Company Name",
-    period: "2025 — Present",
+    title: "Machine Learning Team Assistant",
+    tagline: "UCL",
+    period: "Jun 2025 — Jul 2025",
     summary:
-      "Placeholder. Describe what you own, not what you were assigned. Lead with the outcome and let the stack follow: what got faster, cheaper, more reliable, or possible that was not before. Two or three concrete achievements with numbers attached will do more than a list of technologies, and the skill tags below already cover the stack.",
-    skills: ["TypeScript", "Next.js", "PostgreSQL"],
+      "Engineered a multi-task PyTorch model that classifies, detects and segments 10 hand gestures in a single forward pass, reaching 82.4% classification accuracy on a held-out-subject test set of 5,450 annotated samples. The detection half was YOLOv1 reimplemented end-to-end from scratch and fused with a U-Net head on a shared Darknet backbone: 82% detection accuracy and 0.62 mean box IoU at roughly 20% lower parameter cost than running three separate models. Then I deployed the network in a real-time front-end demo doing live webcam detection, classification and segmentation — which is what actually validated the single-pass architecture beyond the training pipeline.",
+    skills: [
+      "PyTorch",
+      "Python",
+      "YOLOv1",
+      "U-Net",
+      "Multi-task learning",
+      "Computer vision",
+    ],
     createdAt: "2025-06-01T00:00:00Z",
-    theme: { color: "#75c5de" },
+    theme: { color: "#14384a", ink: "light" },
   },
   {
-    slug: "previous-role",
+    slug: "mongol-new-resource",
     kind: "work",
-    title: "Previous Role",
-    tagline: "Company Name",
-    period: "2024 — 2025",
+    title: "Operations Intern",
+    tagline: "Mongol New Resource Technology LLC",
+    period: "May 2025 — Aug 2025",
     summary:
-      "Placeholder. Same structure as above. If this was an internship or a part-time role, say so plainly — it reads as honest rather than padded, and the work speaks for itself.",
-    skills: ["Python", "Docker", "AWS"],
-    createdAt: "2024-02-01T00:00:00Z",
-    theme: { color: "#1f2a37", ink: "light" },
+      "Designed an internal data integration system consolidating raw-material flows and supplier-to-client transactions across 4 departments, centralising records that had been scattered over departmental spreadsheets into a single authoritative source. Built a structured data program on top of it that improved cross-department coordination and cut the time staff spent locating operational records by around 30%. Led the implementation, structuring 200+ data records, which made reporting faster and reduced retrieval delays between the factories and their suppliers.",
+    skills: [
+      "Data modelling",
+      "Process design",
+      "Excel",
+      "Stakeholder coordination",
+    ],
+    createdAt: "2025-05-01T00:00:00Z",
+    theme: { color: "#594322", ink: "light" },
   },
   {
-    slug: "degree",
-    kind: "education",
-    title: "Your Degree",
-    tagline: "University Name",
-    period: "2021 — 2025",
+    slug: "esm-teaching-assistant",
+    kind: "work",
+    title: "Teaching Assistant — Mathematics and Physics",
+    tagline: "The English School of Mongolia",
+    period: "Oct 2023 — May 2025",
     summary:
-      "Placeholder. Degree, focus, and anything genuinely differentiating — a thesis topic, a notable project, a scholarship. Skip the general-education coursework; nobody reads it.",
-    skills: ["Algorithms", "Databases", "Distributed Systems"],
-    createdAt: "2021-09-01T00:00:00Z",
-    theme: { color: "#3f6f52", ink: "light" },
+      "Delivered hands-on lab experiments and applied mathematics workshops for IB Middle Years and Diploma students, translating complex physics and maths concepts into lessons that landed. Alongside that I tutored 15+ students individually across Grades 9–12, raising their average exam score from 3 to 5 on the IB 7-point scale — a 67% improvement — over a six-week support period. Explaining something to a person who is stuck is still the fastest way I know to find out whether I understand it myself.",
+    skills: ["Teaching", "Physics", "Mathematics", "IB curriculum"],
+    createdAt: "2023-10-01T00:00:00Z",
+    theme: { color: "#2c4e3a", ink: "light" },
   },
 ];
 
