@@ -175,7 +175,7 @@ export default function AboutPage() {
             I've played a lot of sports — basketball, table tennis, bowling, tennis, football, frisbee — but volleyball is the one that stuck. 
             It's the most genuinely collective sport I've tried: you physically cannot score alone, 
             every point runs through at least two other people. 
-            I now play for the University of Manchester Volleyball Club men's 2 team. 
+            I now play for the University of Manchester Volleyball Club men's 1 team. 
             It turns out the thing I like about a good team on court is the same thing I like about a good codebase — everything only works because someone else set it up for you.
           </p>
         </AboutRow>
