@@ -106,20 +106,15 @@ body {
   transition: background-color 0.55s ease, color 0.55s ease;
 }
 
-/* Theme image layer. Separate from background-color because background-image
-   cannot be transitioned — this fades its opacity instead. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image: var(--page-image);
-  background-size: cover;
-  background-position: center;
-  opacity: var(--page-image-opacity);
-  transition: opacity 0.55s ease;
-}
+/* The theme IMAGE used to be painted here, by a position:fixed body::before
+   that covered the entire viewport. It no longer is — a hover picture that
+   floods the window swamps the header, the footer and all the whitespace, and
+   the brief is that it should sit behind the project section only. The layer
+   now lives on .theme-region::before (see "Themed region" further down), which
+   is sized to the page heading plus the entry panel and nothing else.
+
+   --page-bg still repaints the whole page, which is what the solid-colour
+   themes want; only the image is scoped. */
 
 /* ============================================================================
    PORTFOLIO HOME PAGE
@@ -1054,6 +1049,73 @@ body::before {
   .page { padding: 116px 40px 40px; }
 }
 
+/* ---------- Themed region (the hover picture's box) ----------------------- */
+/*
+ * Wraps the page heading and the entry panel on /projects, and nothing else.
+ * Its ::before is the layer the per-project theme image paints into, so the
+ * picture is bounded by exactly those two blocks instead of flooding the
+ * window the way the old body::before did.
+ *
+ * The wrapper is a plain block with no box of its own, so it changes no
+ * layout: the heading's 26px bottom margin still separates it from the panel.
+ */
+.theme-region {
+  position: relative;
+}
+
+.theme-region::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;              /* under .page-head and .entry-panel, both z-index 1 */
+  pointer-events: none;
+  border-radius: 18px;     /* matches .entry-panel, so the edges agree */
+
+  /*
+   * Two stacked layers in one element:
+   *
+   *   1. a scrim in the page colour: solid across the top 6%, then fading out
+   *      by 30%. The picture emerges from under the heading rather than
+   *      starting behind it.
+   *   2. the image itself.
+   *
+   * The solid band is not decoration, it is the only thing that keeps the
+   * eyebrow readable. "02 — PROJECTS" is 11px in --page-accent, a teal whose
+   * 4.67:1 on the plain page field is already close to the 4.5:1 AA floor —
+   * tinting what sits behind it by even a few percent pushes it under, and
+   * over the near-black corner of the Battlecode image it measured 2.50:1.
+   * A partial scrim cannot rescue that: at 90% it is still only 4.19:1. So
+   * the band under the eyebrow is the page colour and nothing else, and the
+   * fade starts below it, where the only text left is the 52px title.
+   *
+   * rgba(228,228,228,…) is --bg. It is written out rather than referenced
+   * because a custom property cannot be given an alpha inside a gradient stop
+   * without color-mix, and this has to work the same everywhere.
+   */
+  background-image: linear-gradient(
+      to bottom,
+      rgba(228, 228, 228, 1) 0%,
+      rgba(228, 228, 228, 1) 6%,
+      rgba(228, 228, 228, 0) 30%
+    ),
+    var(--page-image);
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+
+  /*
+   * "All pictures half transparent." 0.5 is the requested weight; the second
+   * factor is the on/off switch EntryGrid flips, which is what makes the fade
+   * animatable (background-image itself cannot be transitioned).
+   */
+  opacity: calc(var(--page-image-opacity) * 0.5);
+  transition: opacity 0.55s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-region::before { transition: none; }
+}
+
 /* Above the sprite layer — otherwise a floating sprite can land on the title. */
 .page-head {
   position: relative;
@@ -1100,11 +1162,22 @@ body::before {
   z-index: 1;
   border: 1px solid rgba(17, 17, 17, 0.12);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.42);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  /*
+   * The panel's white veil and its blur both back off while an image theme is
+   * showing. Without that the picture only survives in the strip above the
+   * panel: a 42% white wash plus a 10px backdrop blur turns everything behind
+   * the gutters into a smudge, which is the opposite of the point. The cards
+   * themselves stay opaque, so no body text ever sits on the picture.
+   *
+   * --page-image-opacity is 0 or 1 and unitless, so it doubles as the mix
+   * factor here — no extra state, and it fades on the same curve.
+   */
+  background: rgba(255, 255, 255, calc(0.42 - 0.3 * var(--page-image-opacity)));
+  backdrop-filter: blur(calc(10px - 7px * var(--page-image-opacity)));
+  -webkit-backdrop-filter: blur(calc(10px - 7px * var(--page-image-opacity)));
   padding: 14px;
-  transition: background 0.55s ease, border-color 0.55s ease;
+  transition: background 0.55s ease, border-color 0.55s ease,
+    backdrop-filter 0.55s ease;
 }
 @media (min-width: 900px) {
   .entry-panel {

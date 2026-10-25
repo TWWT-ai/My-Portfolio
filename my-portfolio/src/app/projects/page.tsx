@@ -45,14 +45,18 @@ export default function ProjectsPage() {
     <main className="page">
       <FloatingSprites set="projects" />
 
-      <div className="page-head">
-        <span className="page-eyebrow">02 — Projects</span>
-        <h1 className="page-title">Projects</h1>
-        <p className="page-lede">
-          Case studies in reverse order. Hover one to read it.
-        </p>
+      {/* The hover picture is bounded by this wrapper — heading plus panel, not
+          the whole window. See .theme-region in globals.css. */}
+      <div className="theme-region">
+        <div className="page-head">
+          <span className="page-eyebrow">02 — Projects</span>
+          <h1 className="page-title">Projects</h1>
+          <p className="page-lede">
+            Case studies in reverse order. Hover one to read it.
+          </p>
+        </div>
+        <EntryGrid entries={entries} emptyLabel="No projects published yet." />
       </div>
-      <EntryGrid entries={entries} emptyLabel="No projects published yet." />
     </main>
   );
 }
