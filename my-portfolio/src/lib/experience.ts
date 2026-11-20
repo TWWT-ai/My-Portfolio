@@ -65,7 +65,7 @@ export const EXPERIENCE: Experience[] = [
     kind: "work",
     title: "UCL Hawkes Institute Assistant",
     tagline: "UCL",
-    period: "Jun 2025 — Jul 2025",
+    period: "Jun 2026 — Aug 2026",
     summary:
       "Engineered a multi-task PyTorch model that classifies, detects and segments 10 hand gestures in a single forward pass, reaching 82.4% classification accuracy on a held-out-subject test set of 5,450 annotated samples. The detection half was YOLOv1 reimplemented end-to-end from scratch and fused with a U-Net head on a shared Darknet backbone: 82% detection accuracy and 0.62 mean box IoU at roughly 20% lower parameter cost than running three separate models. Then I deployed the network in a real-time front-end demo doing live webcam detection, classification and segmentation — which is what actually validated the single-pass architecture beyond the training pipeline.",
     skills: [
