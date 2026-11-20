@@ -96,18 +96,18 @@ export const EXPERIENCE: Experience[] = [
     createdAt: "2025-05-01T00:00:00Z",
     theme: { color: "#594322", ink: "light" },
   },
-  {
-    slug: "esm-teaching-assistant",
-    kind: "work",
-    title: "Teaching Assistant — Mathematics and Physics",
-    tagline: "The English School of Mongolia",
-    period: "Oct 2023 — May 2025",
-    summary:
-      "Delivered hands-on lab experiments and applied mathematics workshops for IB Middle Years and Diploma students, translating complex physics and maths concepts into lessons that landed. Alongside that I tutored 15+ students individually across Grades 9–12, raising their average exam score from 3 to 5 on the IB 7-point scale — a 67% improvement — over a six-week support period. Explaining something to a person who is stuck is still the fastest way I know to find out whether I understand it myself.",
-    skills: ["Teaching", "Physics", "Mathematics", "IB curriculum"],
-    createdAt: "2023-10-01T00:00:00Z",
-    theme: { color: "#2c4e3a", ink: "light" },
-  },
+  // {
+  //   slug: "esm-teaching-assistant",
+  //   kind: "work",
+  //   title: "Teaching Assistant — Mathematics and Physics",
+  //   tagline: "The English School of Mongolia",
+  //   period: "Oct 2023 — May 2025",
+  //   summary:
+  //     "Delivered hands-on lab experiments and applied mathematics workshops for IB Middle Years and Diploma students, translating complex physics and maths concepts into lessons that landed. Alongside that I tutored 15+ students individually across Grades 9–12, raising their average exam score from 3 to 5 on the IB 7-point scale — a 67% improvement — over a six-week support period. Explaining something to a person who is stuck is still the fastest way I know to find out whether I understand it myself.",
+  //   skills: ["Teaching", "Physics", "Mathematics", "IB curriculum"],
+  //   createdAt: "2023-10-01T00:00:00Z",
+  //   theme: { color: "#2c4e3a", ink: "light" },
+  // },
 ];
 
 /** Newest first, same contract as projectsByNewest(). */
