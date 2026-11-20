@@ -61,9 +61,9 @@ export type Experience = {
 
 export const EXPERIENCE: Experience[] = [
   {
-    slug: "ucl-ml-assistant",
+    slug: "UCL-Hawkes-Institute-Assistant",
     kind: "work",
-    title: "Machine Learning Team Assistant",
+    title: "UCL Hawkes Institute Assistant",
     tagline: "UCL",
     period: "Jun 2025 — Jul 2025",
     summary:
