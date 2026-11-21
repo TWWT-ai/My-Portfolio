@@ -134,7 +134,7 @@ function rateLimited(ip: string): boolean {
  */
 function resolveResumeUrl(origin: string): string {
   const raw = process.env.RESUME_URL?.trim();
-  if (!raw) return `${origin}/resume.pdf`;
+  if (!raw) return `${origin}/resume/Temuulen_Wang_CV.pdf`;
   if (/^https?:\/\//i.test(raw)) return raw;
   const path = raw.replace(/^\/?public\//i, "/").replace(/^\/?/, "/");
   return `${origin}${path}`;
